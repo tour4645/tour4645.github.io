@@ -156,6 +156,11 @@
             if (points.length > 0) {
                 createRoute();
                 createTrain();
+
+                // Position camera near the start
+                camera.position.copy(points[0]).add(new THREE.Vector3(0, 5, 10));
+                controls.target.copy(points[0]);
+
                 animate();
                 document.getElementById('loading').style.opacity = '0';
                 setTimeout(() => document.getElementById('loading').remove(), 500);
@@ -166,19 +171,41 @@
             try {
                 const response = await fetch('travel-phitsanulok.csv');
                 const data = await response.text();
-                const rows = data.split('\n').slice(1);
+
+                // Robust CSV Parser for quoted fields
+                const parseCSV = (str) => {
+                    const arr = [];
+                    let quote = false;
+                    let col = "";
+                    let row = [];
+                    for (let i = 0; i < str.length; i++) {
+                        const char = str[i];
+                        const next = str[i + 1];
+                        if (char === '"' && quote && next === '"') { col += char; i++; continue; }
+                        if (char === '"') { quote = !quote; continue; }
+                        if (char === ',' && !quote) { row.push(col); col = ""; continue; }
+                        if (char === '\n' && !quote) { row.push(col); arr.push(row); col = ""; row = []; continue; }
+                        col += char;
+                    }
+                    if (col || row.length) { row.push(col); arr.push(row); }
+                    return arr;
+                };
+
+                const rows = parseCSV(data).slice(1); // Remove header
 
                 // Find center to normalize coordinates
                 let midLat = 0, midLon = 0;
                 let validRows = 0;
 
-                const rawData = rows.map(r => r.split(',')).filter(c => c.length > 5 && !isNaN(parseFloat(c[4])));
+                const rawData = rows.filter(c => c.length > 5 && !isNaN(parseFloat(c[4])));
 
                 rawData.forEach(cols => {
                     midLat += parseFloat(cols[4]);
                     midLon += parseFloat(cols[5]);
                     validRows++;
                 });
+
+                if (validRows === 0) return;
 
                 midLat /= validRows;
                 midLon /= validRows;
@@ -187,16 +214,19 @@
                     const lat = parseFloat(cols[4]);
                     const lon = parseFloat(cols[5]);
 
-                    // Convert to 3D coords (Mercator-ish simplification)
+                    // Convert to 3D coords
                     const x = (lon - midLon) * SCALE;
                     const z = (midLat - lat) * SCALE;
-                    const y = i * 0.01; // Tiny elevation gain over time
+                    const y = i * 0.01;
 
                     const v = new THREE.Vector3(x, y, z);
                     points.push(v);
+
+                    // Column indices based on header: 
+                    // 0:device, 1:model, 2:battery, 3:charging, 4:lat, 5:lon, 6:accuracy, 7:source, 8:place, 9:place_type, 10:locality, 11:address, 12:updated
                     waypointsData.push({
-                        place: cols[8] || cols[10] || "Moving...",
-                        time: cols[12],
+                        place: cols[10] || cols[8] || "Moving...",
+                        time: cols[12]?.split(' ')[1] || "??:??",
                         bat: cols[2]
                     });
                 });

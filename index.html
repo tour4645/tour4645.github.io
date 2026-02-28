@@ -5,250 +5,207 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Txur Oracle | GPS Travel Map</title>
-
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Sarabun:wght@300;400;600&display=swap"
-        rel="stylesheet">
-
+    <!-- Leaflet.js CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #0a0a0c;
-            --card-bg: #16161a;
+            --bg-color: #0a0a0a;
             --accent-color: #facc15;
-            /* Quantum Gold */
-            --text-main: #e2e8f0;
-            --text-dim: #94a3b8;
+            --text-main: #ffffff;
+            --panel-bg: rgba(15, 15, 15, 0.85);
         }
 
-        body,
-        html {
+        body {
             margin: 0;
             padding: 0;
-            height: 100%;
-            background-color: var(--bg-color);
+            background: var(--bg-color);
             color: var(--text-main);
-            font-family: 'Outfit', 'Sarabun', sans-serif;
-            overflow: hidden;
+            font-family: 'Outfit', sans-serif;
+            height: 100vh;
             display: flex;
             flex-direction: column;
-        }
-
-        header {
-            padding: 1rem 2rem;
-            background: rgba(10, 10, 12, 0.8);
-            backdrop-filter: blur(10px);
-            z-index: 1000;
-            border-bottom: 1px solid rgba(250, 204, 21, 0.2);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        h1 {
-            margin: 0;
-            font-size: 1.5rem;
-            font-weight: 600;
-            letter-spacing: -0.02em;
-            color: var(--accent-color);
-        }
-
-        .status-badge {
-            font-size: 0.75rem;
-            padding: 0.25rem 0.75rem;
-            border-radius: 99px;
-            background: rgba(250, 204, 21, 0.1);
-            border: 1px solid var(--accent-color);
-            color: var(--accent-color);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
         }
 
         #map {
             flex-grow: 1;
             width: 100%;
+            z-index: 1;
         }
 
-        /* Leaflet Dark Theme Adjustments */
-        .leaflet-container {
-            background: #111 !important;
+        header {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: var(--panel-bg);
+            padding: 15px 25px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(250, 204, 21, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: var(--accent-color);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .stats {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            margin-top: 5px;
         }
 
         footer {
-            padding: 0.75rem 2rem;
-            background: var(--card-bg);
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            font-size: 0.85rem;
-            color: var(--text-dim);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            background: #000;
+            color: var(--accent-color);
+            padding: 10px 20px;
+            font-size: 0.75rem;
+            text-align: center;
+            border-top: 1px solid #222;
             z-index: 1000;
         }
 
-        .oracle-tag {
-            font-weight: 600;
-            color: var(--text-main);
+        /* Custom Leaflet Dark Theme */
+        .leaflet-container {
+            background: #000 !important;
         }
 
-        /* Custom Popup Styling */
         .leaflet-popup-content-wrapper {
-            background: var(--card-bg);
-            color: var(--text-main);
-            border: 1px solid rgba(250, 204, 21, 0.3);
-            border-radius: 12px;
-            padding: 4px;
+            background: var(--panel-bg);
+            color: white;
+            border-radius: 8px;
+            border: 1px solid var(--accent-color);
+            backdrop-filter: blur(10px);
         }
 
         .leaflet-popup-tip {
-            background: var(--card-bg);
+            background: var(--accent-color);
         }
 
-        .popup-header {
+        .popup-info b {
             color: var(--accent-color);
-            font-weight: 600;
-            margin-bottom: 4px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding-bottom: 4px;
-        }
-
-        .popup-body {
-            font-size: 0.85rem;
-            line-height: 1.4;
-        }
-
-        .popup-meta {
-            margin-top: 6px;
-            font-size: 0.75rem;
-            color: var(--text-dim);
-            display: flex;
-            gap: 10px;
-        }
-
-        .battery-icon {
-            display: inline-block;
-            width: 12px;
-            height: 6px;
-            border: 1px solid currentColor;
-            position: relative;
-            margin-right: 4px;
-        }
-
-        .battery-icon::after {
-            content: '';
-            position: absolute;
-            right: -2px;
-            top: 1px;
-            width: 2px;
-            height: 4px;
-            background: currentColor;
         }
     </style>
 </head>
 
 <body>
-
     <header>
-        <div>
-            <h1>Chiang Mai → Phitsanulok</h1>
-            <div style="font-size: 0.8rem; color: var(--text-dim);">GPS Tracking Analysis | PSRU Workshop Wave</div>
-        </div>
-        <div class="status-badge">Quantum Core Active</div>
+        <h1>Oracle Quantum Map</h1>
+        <div class="stats" id="status">Analyzing GPS Waypoints...</div>
     </header>
 
     <div id="map"></div>
 
     <footer>
-        <div>Generated with curiosity by <span class="oracle-tag">Txur Oracle</span></div>
-        <div>28 Feb 2026 | PSUR, Phitsanulok</div>
+        Txur Oracle | Two Rivers Oracle Project | 2026
     </footer>
 
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- Leaflet.js JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
-        // Initialize Map
-        const map = L.map('map').setView([18.7883, 98.9853], 8);
+        // Init Map
+        const map = L.map('map').setView([17.5, 100.0], 8);
 
-        // Dark Theme Tiles (CartoDB Dark Matter)
+        // Dark Theme Layer (CartoDB DarkMatter)
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            attribution: '&copy; OpenStreetMap &copy; CARTO',
             subdomains: 'abcd',
             maxZoom: 20
         }).addTo(map);
 
-        // Function to parse CSV
-        async function loadTravelData() {
+        // Robust CSV Parser
+        function parseCSV(str) {
+            const arr = [];
+            let quote = false;
+            let col = "";
+            let row = [];
+            for (let i = 0; i < str.length; i++) {
+                const char = str[i];
+                const next = str[i + 1];
+                if (char === '"' && quote && next === '"') { col += char; i++; continue; }
+                if (char === '"') { quote = !quote; continue; }
+                if (char === ',' && !quote) { row.push(col.trim()); col = ""; continue; }
+                if ((char === '\n' || char === '\r\n') && !quote) {
+                    if (col || row.length) { row.push(col.trim()); arr.push(row); }
+                    col = ""; row = [];
+                    if (char === '\r' && next === '\n') i++;
+                    continue;
+                }
+                col += char;
+            }
+            if (col || row.length) { row.push(col.trim()); arr.push(row); }
+            return arr;
+        }
+
+        async function loadData() {
             try {
                 const response = await fetch('travel-phitsanulok.csv');
-                const data = await response.text();
-                const rows = data.split('\n').slice(1); // Skip header
+                const csvData = await response.text();
+                const rows = parseCSV(csvData).slice(1); // Skip header
 
-                const points = [];
+                const latlngs = [];
+                let latestPoint = null;
 
-                rows.forEach(row => {
-                    const cols = row.split(',');
-                    if (cols.length < 13) return;
-
+                rows.forEach((cols, index) => {
                     const lat = parseFloat(cols[4]);
                     const lon = parseFloat(cols[5]);
 
-                    if (isNaN(lat) || isNaN(lon)) return;
+                    if (!isNaN(lat) && !isNaN(lon)) {
+                        const point = [lat, lon];
+                        latlngs.push(point);
+                        latestPoint = point;
 
-                    const battery = cols[2];
-                    const address = cols[11]?.replace(/"/g, '') || cols[10] || "Unknown Location";
-                    const time = cols[12];
-                    const place = cols[8] || cols[10];
+                        const place = cols[10] || cols[8] || "Route Update";
+                        const time = cols[12] ? cols[12].split(' ')[1] : "Unknown";
+                        const battery = cols[2];
 
-                    points.push([lat, lon]);
+                        const marker = L.circleMarker(point, {
+                            radius: (index === 0 || index === rows.length - 1) ? 8 : 4,
+                            fillColor: (index === 0) ? "#22c55e" : (index === rows.length - 1) ? "#ef4444" : "#facc15",
+                            color: "#000",
+                            weight: 1,
+                            opacity: 1,
+                            fillOpacity: 0.8
+                        }).addTo(map);
 
-                    // Add Marker
-                    const marker = L.circleMarker([lat, lon], {
-                        radius: 5,
-                        fillColor: "#facc15",
-                        color: "#000",
-                        weight: 1,
-                        opacity: 1,
-                        fillOpacity: 0.8
-                    }).addTo(map);
-
-                    marker.bindPopup(`
-                        <div class="popup-header">${place || 'Waypoint'}</div>
-                        <div class="popup-body">${address}</div>
-                        <div class="popup-meta">
-                            <span>🕒 ${time}</span>
-                            <span>🔋 ${battery}%</span>
-                        </div>
-                    `);
+                        marker.bindPopup(`
+                            <div class="popup-info">
+                                <b>Location:</b> ${place}<br>
+                                <b>Time:</b> ${time}<br>
+                                <b>Battery:</b> ${battery}%
+                            </div>
+                        `);
+                    }
                 });
 
-                // Connect the dots
-                if (points.length > 0) {
-                    const polyline = L.polyline(points, {
+                if (latlngs.length > 0) {
+                    // Draw Polyline
+                    const polyline = L.polyline(latlngs, {
                         color: '#facc15',
-                        weight: 3,
+                        weight: 2,
                         opacity: 0.6,
-                        smoothFactor: 1
+                        dashArray: '5, 10'
                     }).addTo(map);
 
-                    // Zoom to fit bounds
+                    // Zoom to fit the entire route
                     map.fitBounds(polyline.getBounds(), { padding: [50, 50] });
+                    document.getElementById('status').innerText = `Path Active: ${latlngs.length} Quantum Waypoints`;
                 }
 
-            } catch (error) {
-                console.error('Error loading CSV:', error);
-                document.getElementById('map').innerHTML = '<div style="padding: 2rem; color: #ff5555;">Error loading CSV data. Please ensure travel-phitsanulok.csv is in the same folder.</div>';
+            } catch (err) {
+                console.error("Failed to load GPS data:", err);
+                document.getElementById('status').innerText = "Data Load Failed: Check CSV path";
             }
         }
 
-        loadTravelData();
+        loadData();
     </script>
 </body>
 
