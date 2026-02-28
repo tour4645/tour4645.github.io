@@ -152,6 +152,14 @@
             const grid = new THREE.GridHelper(2000, 100, 0x94a3b8, 0xcbd5e1);
             scene.add(grid);
 
+            // Ground Plane (Natural Ground)
+            const groundGeo = new THREE.PlaneGeometry(5000, 5000);
+            const groundMat = new THREE.MeshPhongMaterial({ color: 0xdcfce7 }); // Soft Green Ground
+            const ground = new THREE.Mesh(groundGeo, groundMat);
+            ground.rotation.x = -Math.PI / 2;
+            ground.position.y = -0.05;
+            scene.add(ground);
+
             // Load Data
             await loadCSV();
 
@@ -244,14 +252,18 @@
             pathLine = new THREE.Line(geometry, material);
             scene.add(pathLine);
 
+            // Environment (Natural Style - More Trees)
             points.forEach((p, i) => {
-                if (i % 6 === 0) {
+                if (i % 4 === 0) { // เพิ่มความถี่
                     const dotGeo = new THREE.SphereGeometry(0.15, 12, 12);
                     const dotMat = new THREE.MeshPhongMaterial({ color: 0x60a5fa, emissive: 0x60a5fa, emissiveIntensity: 0.3 });
                     const dot = new THREE.Mesh(dotGeo, dotMat);
                     dot.position.copy(p);
                     scene.add(dot);
-                    if (Math.random() > 0.6) addDecorativeObject(p);
+
+                    // สุ่มต้นไม้ให้เยอะขึ้น
+                    if (Math.random() > 0.4) addDecorativeObject(p);
+                    if (Math.random() > 0.7) addDecorativeObject(p);
                 }
             });
         }
@@ -341,7 +353,7 @@
         }
 
         let curveTimer = 0;
-        const CAR_OFFSET = 0.008;
+        const CAR_OFFSET = 0.0035; // ลดระยะให้ติดกัน (Realistic)
 
         function animate() {
             requestAnimationFrame(animate);
