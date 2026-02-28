@@ -239,33 +239,48 @@
                 const response = await fetch('travel-phitsanulok.csv');
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const data = await response.text();
-                const lines = data.split('\n').slice(1);
+
+                const rows = data.split('\n').filter(line => line.trim().length > 0);
+                const header = rows[0].split(',');
+                const lines = rows.slice(1);
+
+                const latIdx = header.indexOf('lat');
+                const lonIdx = header.indexOf('lon');
+                const timeIdx = header.indexOf('updated');
+                const addrIdx = header.indexOf('address');
 
                 let midLat = 0, midLon = 0, validCount = 0;
-                const rawRows = lines.map(line => line.split(',')).filter(r => r.length > 5 && !isNaN(parseFloat(r[4])));
+                const rawRows = lines.map(line => {
+                    const r = line.split(',');
+                    // Early columns (lat/lon) are safe from address commas
+                    return r.length > latIdx && !isNaN(parseFloat(r[latIdx])) ? r : null;
+                }).filter(r => r !== null);
 
                 rawRows.forEach(r => {
-                    midLat += parseFloat(r[4]);
-                    midLon += parseFloat(r[5]);
+                    midLat += parseFloat(r[latIdx]);
+                    midLon += parseFloat(r[lonIdx]);
                     validCount++;
                 });
+
+                if (validCount === 0) return;
 
                 midLat /= validCount;
                 midLon /= validCount;
 
                 rawRows.forEach(r => {
-                    const lat = parseFloat(r[4]);
-                    const lon = parseFloat(r[5]);
+                    const lat = parseFloat(r[latIdx]);
+                    const lon = parseFloat(r[lonIdx]);
                     const x = (lon - midLon) * SCALE;
                     const z = (midLat - lat) * SCALE;
                     points.push(new THREE.Vector3(x, 0.5, z));
 
-                    const addr = r[11] || "";
-                    const省 = addr.split(',').pop().trim().split(' ')[0] || r[10] || "Unknown";
+                    const addr = r[addrIdx] || "";
+                    // Best effort to get province if address is quoted and has commas
+                    const province = addr.includes(',') ? addr.split(',').pop().trim().split(' ')[0] : "Province";
 
                     waypointsData.push({
-                        province: 省,
-                        time: r[12]?.split(' ')[1] || "00:00"
+                        province: province,
+                        time: r[timeIdx]?.split(' ')[1] || "00:00"
                     });
                 });
             } catch (e) {
