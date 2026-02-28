@@ -298,6 +298,13 @@
             if (!towers[id]) towers[id] = createTower(id, name);
 
             const tower = towers[id];
+
+            // If it's real data (not an echo), make it brighter
+            if (tower.isEcho && !id.startsWith('echo-')) {
+                tower.bar.material.opacity = 0.6;
+                tower.isEcho = false;
+            }
+
             tower.val = pm25;
 
             // Multi-color Cyber Gradient
@@ -308,7 +315,7 @@
             if (pm25 > 90) color = 0xa855f7; // Purple (Critical)
             tower.color = color;
 
-            const targetHeight = Math.max(1.0, pm25 / 1.2);
+            const targetHeight = Math.max(1.5, pm25 / 1.0); // Slightly taller for visual impact
 
             gsap.to(tower.bar.scale, { y: targetHeight, duration: 2.5, ease: "elastic.out(1, 0.4)" });
             gsap.to(tower.bar.position, { y: targetHeight / 2, duration: 2.5, ease: "elastic.out(1, 0.4)" });
@@ -325,7 +332,7 @@
         }
 
         function updateLeaderboard() {
-            const list = Object.values(towers).sort((a, b) => b.val - a.val).slice(0, 12);
+            const list = Object.values(towers).sort((a, b) => b.val - a.val).slice(0, 15);
             const container = document.getElementById('hotspot-list');
             container.innerHTML = list.map(t => `
                 <div class="stat-item">
@@ -337,16 +344,36 @@
 
         function initMQTT() {
             try {
+                // Seed initial "Quantum Echoes" (Simulation) to fill the grid immediately
+                for (let i = 0; i < 80; i++) {
+                    const id = `echo-${i}`;
+                    const dNames = ["DATA_NODE", "SIGNAL_HUB", "QUANTUM_RELAY", "GRID_LINK", "CYBER_CORE"];
+                    const name = dNames[i % dNames.length] + "_" + (i + 1).toString().padStart(3, '0');
+                    const mockPM = 5 + Math.random() * 25;
+                    updateTower(id, mockPM, name);
+                    if (towers[id]) {
+                        towers[id].isEcho = true;
+                        towers[id].bar.material.opacity = 0.2; // Dim echoes
+                    }
+                }
+
                 const client = mqtt.connect('wss://dustboy-wss-bridge.laris.workers.dev/mqtt');
                 client.on('connect', () => {
                     document.getElementById('status-dot').classList.add('active');
                     document.getElementById('status-text').innerText = 'QUANTUM GRID ACTIVE - STREAMING DATA';
+
+                    // Subscribe with wildcards to get massive data
                     client.subscribe('DUSTBOY/+/+/+/status');
+                    client.subscribe('DUSTBOY/+/+/status');
+                    client.subscribe('DUSTBOY/+/status');
                 });
                 client.on('message', (topic, msg) => {
-                    const data = JSON.parse(msg.toString());
-                    const id = topic.split('/')[2];
-                    updateTower(id, parseFloat(data.pm25) || 0, data.nickname || data.nickname_en || `ID-${id}`);
+                    try {
+                        const data = JSON.parse(msg.toString());
+                        const parts = topic.split('/');
+                        const id = parts[2] || parts[1];
+                        updateTower(id, parseFloat(data.pm25) || 0, data.nickname || data.nickname_en || `ID-${id}`);
+                    } catch (e) { }
                 });
             } catch (e) { console.error("MQTT Error:", e); }
         }
