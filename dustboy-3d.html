@@ -307,20 +307,20 @@
             ctx.roundRect ? ctx.roundRect(0, 0, 512, 128, 20) : ctx.fillRect(0, 0, 512, 128);
             ctx.fill();
 
-            ctx.font = '800 64px "Outfit", "Sarabun", sans-serif';
+            ctx.font = '800 48px "Sarabun", "Outfit", sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
 
             // Glow effect
             ctx.shadowColor = color;
-            ctx.shadowBlur = 15;
+            ctx.shadowBlur = 12;
             ctx.fillStyle = '#ffffff';
             ctx.fillText(text, 256, 64);
 
             const texture = new THREE.CanvasTexture(canvas);
             const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true });
             const sprite = new THREE.Sprite(spriteMat);
-            sprite.scale.set(12, 3, 1);
+            sprite.scale.set(7.5, 1.85, 1);
             return sprite;
         }
 
