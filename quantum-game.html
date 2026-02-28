@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Star Interactive | 3D Space Lab</title>
+    <style>
+        :root {
+            --accent: #00f3ff;
+            --gold: #facc15;
+            --bg: #020617;
+            --glass: rgba(15, 23, 42, 0.82);
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: var(--bg);
+            font-family: 'Outfit', sans-serif;
+            color: white;
+        }
+
+        #ui-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .card {
+            background: var(--glass);
+            padding: 24px;
+            border-radius: 16px;
+            border: 1px solid rgba(0, 243, 255, 0.25);
+            backdrop-filter: blur(15px);
+            pointer-events: auto;
+            max-width: 320px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 800;
+        }
+
+        .instruction {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+
+        .highlight-text {
+            color: var(--gold);
+            font-weight: 600;
+        }
+
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            color: var(--accent);
+            font-size: 1.4rem;
+            letter-spacing: 5px;
+            transition: opacity 0.8s;
+        }
+
+        .btn-back {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: var(--glass);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            text-decoration: none;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            z-index: 100;
+        }
+
+        .btn-back:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--accent);
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <div id="loading">IGNITING QUANTUM STARS...</div>
+
+    <div id="ui-overlay">
+        <div class="card">
+            <h1>STAR LAB 3D</h1>
+            <div class="instruction">
+                ยินดีต้อนรับสู่ห้องแล็บจัดระเบียบจักรวาล!<br><br>
+                🌌 <span class="highlight-text">หยิบดวงดาว:</span> คลิกค้างเพื่อหยิบ<br>
+                🎯 <span class="highlight-text">ย้ายตำแหน่ง:</span> ลากไปยังจุดที่ต้องการ<br>
+                🔄 <span class="highlight-text">มุมมอง:</span> คลิกขวาลากเพื่อหมุนมุมกล้อง
+            </div>
+        </div>
+    </div>
+
+    <a href="index.html" class="btn-back">กลับหน้าแดชบอร์ด</a>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { DragControls } from 'three/addons/controls/DragControls.js';
+
+        let scene, camera, renderer, orbit, drag;
+        let stars = [];
+        let starGroup;
+
+        init();
+
+        function init() {
+            // Scene Setup
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x020617);
+
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
+            camera.position.set(0, 50, 100);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            document.body.appendChild(renderer.domElement);
+
+            // Orbit Controls (For Camera rotation)
+            orbit = new OrbitControls(camera, renderer.domElement);
+            orbit.enableDamping = true;
+            orbit.dampingFactor = 0.05;
+            orbit.mouseButtons = {
+                LEFT: null, // Disable left click for orbit so drag can work
+                MIDDLE: THREE.MOUSE.DOLLY,
+                RIGHT: THREE.MOUSE.ROTATE
+            };
+
+            // Lights
+            scene.add(new THREE.AmbientLight(0xffffff, 0.3));
+            const pLight = new THREE.PointLight(0x00f3ff, 10, 500);
+            pLight.position.set(50, 200, 50);
+            scene.add(pLight);
+
+            // Back Starfield
+            const starGeo = new THREE.BufferGeometry();
+            const starCount = 6000;
+            const starPos = new Float32Array(starCount * 3);
+            for (let i = 0; i < starCount * 3; i++) {
+                starPos[i] = (Math.random() - 0.5) * 1200;
+            }
+            starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+            const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.6, transparent: true, opacity: 0.5 });
+            scene.add(new THREE.Points(starGeo, starMat));
+
+            // Grid Planet
+            const grid = new THREE.GridHelper(400, 40, 0x00f3ff, 0x0a101f);
+            grid.position.y = -20;
+            scene.add(grid);
+
+            // Create Interactive Stars
+            createInteractiveStars();
+
+            // Drag Controls
+            drag = new DragControls(stars, camera, renderer.domElement);
+
+            drag.addEventListener('dragstart', (event) => {
+                orbit.enabled = false; // Disable orbit when dragging
+                event.object.material.emissiveIntensity = 2.0;
+                event.object.scale.multiplyScalar(1.2);
+            });
+
+            drag.addEventListener('dragend', (event) => {
+                orbit.enabled = true; // Re-enable orbit
+                event.object.material.emissiveIntensity = 0.5;
+                event.object.scale.divideScalar(1.2);
+            });
+
+            animate();
+
+            // Loading screen hide
+            const loader = document.getElementById('loading');
+            setTimeout(() => {
+                loader.style.opacity = '0';
+                setTimeout(() => loader.style.display = 'none', 800);
+            }, 1000);
+        }
+
+        function createInteractiveStars() {
+            const starTypes = [
+                { geo: new THREE.IcosahedronGeometry(5, 0), color: 0x00f3ff }, // Neon Blue
+                { geo: new THREE.SphereGeometry(4, 32, 32), color: 0xfacc15 }, // Gold
+                { geo: new THREE.OctahedronGeometry(6, 0), color: 0xff0055 }, // Pink
+                { geo: new THREE.TorusKnotGeometry(3, 1, 64, 8), color: 0x4ade80 } // Green
+            ];
+
+            for (let i = 0; i < 30; i++) {
+                const type = starTypes[Math.floor(Math.random() * starTypes.length)];
+                const mat = new THREE.MeshPhongMaterial({
+                    color: type.color,
+                    emissive: type.color,
+                    emissiveIntensity: 0.5,
+                    shininess: 100,
+                    flatShading: true
+                });
+
+                const star = new THREE.Mesh(type.geo, mat);
+
+                // Random position
+                star.position.set(
+                    (Math.random() - 0.5) * 200,
+                    Math.random() * 50,
+                    (Math.random() - 0.5) * 200
+                );
+
+                // Random rotation
+                star.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
+
+                scene.add(star);
+                stars.push(star);
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Subtle rotation for un-picked stars
+            stars.forEach(s => {
+                if (!s.isDragging) {
+                    s.rotation.y += 0.01;
+                    s.rotation.x += 0.005;
+                }
+            });
+
+            if (orbit) orbit.update();
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+
+</html>
