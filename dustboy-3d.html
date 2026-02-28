@@ -356,11 +356,16 @@
             tower.bar.material.emissive.setHex(color);
             tower.top.material.color.setHex(color);
 
-            // UPDATE OR CREATE TEXT LABEL
+            // UPDATE OR CREATE TEXT LABEL - Positioned right above the sphere "head"
             if (tower.textLabel) tower.group.remove(tower.textLabel);
-            const displayText = `${pm25.toFixed(1)} | ${name}`;
+
+            // Show number prominently + Short name
+            const shortName = name.length > 12 ? name.substring(0, 10) + ".." : name;
+            const displayText = `${pm25.toFixed(1)} | ${shortName}`;
+
             tower.textLabel = createTextSprite(displayText, colorHex);
-            tower.textLabel.position.y = targetHeight + 3.5;
+            // Move closer to the sphere head (+1.5 instead of +3.5)
+            tower.textLabel.position.y = targetHeight + 1.5;
             tower.group.add(tower.textLabel);
 
             // Pulse Wave on arrival
