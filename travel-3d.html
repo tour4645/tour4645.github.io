@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Txur Oracle | 3D Quantum Train</title>
+    <style>
+        :root {
+            --bg-color: #050505;
+            --accent-color: #facc15;
+            --text-main: #ffffff;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: var(--bg-color);
+            font-family: 'Outfit', sans-serif;
+        }
+
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: var(--text-main);
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: var(--accent-color);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .stats {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            color: white;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(250, 204, 21, 0.2);
+        }
+
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--accent-color);
+            z-index: 9999;
+            transition: opacity 0.5s;
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            color: var(--accent-color);
+            font-size: 0.7rem;
+            opacity: 0.6;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div id="loading">QUANTUM CORE INITIALIZING...</div>
+
+    <div id="ui">
+        <h1>3D Quantum Logistics</h1>
+        <div class="stats" id="current-pos">Analyzing Waypoints...</div>
+    </div>
+
+    <div class="footer">Txur Oracle | PSRU Workshop | 2026</div>
+
+    <div class="controls">
+        LMB: Rotate | RMB: Pan | Scroll: Zoom<br>
+        Source: travel-phitsanulok.csv
+    </div>
+
+    <!-- Three.js CDN -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        let scene, camera, renderer, controls;
+        let pathLine, train, points = [];
+        let waypointsData = [];
+        let currentIdx = 0;
+        let clock = new THREE.Clock();
+
+        const SCALE = 500; // Scaling factor for coordinates
+
+        init();
+
+        async function init() {
+            // Setup Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x050505);
+            scene.fog = new THREE.Fog(0x050505, 10, 50);
+
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 10, 20);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            document.body.appendChild(renderer.domElement);
+
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
+            scene.add(ambientLight);
+
+            const pointLight = new THREE.PointLight(0xfacc15, 2, 100);
+            pointLight.position.set(10, 10, 10);
+            scene.add(pointLight);
+
+            // Grid
+            const grid = new THREE.GridHelper(100, 50, 0x333333, 0x111111);
+            scene.add(grid);
+
+            // Load Data
+            await loadCSV();
+
+            if (points.length > 0) {
+                createRoute();
+                createTrain();
+                animate();
+                document.getElementById('loading').style.opacity = '0';
+                setTimeout(() => document.getElementById('loading').remove(), 500);
+            }
+        }
+
+        async function loadCSV() {
+            try {
+                const response = await fetch('travel-phitsanulok.csv');
+                const data = await response.text();
+                const rows = data.split('\n').slice(1);
+
+                // Find center to normalize coordinates
+                let midLat = 0, midLon = 0;
+                let validRows = 0;
+
+                const rawData = rows.map(r => r.split(',')).filter(c => c.length > 5 && !isNaN(parseFloat(c[4])));
+
+                rawData.forEach(cols => {
+                    midLat += parseFloat(cols[4]);
+                    midLon += parseFloat(cols[5]);
+                    validRows++;
+                });
+
+                midLat /= validRows;
+                midLon /= validRows;
+
+                rawData.forEach((cols, i) => {
+                    const lat = parseFloat(cols[4]);
+                    const lon = parseFloat(cols[5]);
+
+                    // Convert to 3D coords (Mercator-ish simplification)
+                    const x = (lon - midLon) * SCALE;
+                    const z = (midLat - lat) * SCALE;
+                    const y = i * 0.01; // Tiny elevation gain over time
+
+                    const v = new THREE.Vector3(x, y, z);
+                    points.push(v);
+                    waypointsData.push({
+                        place: cols[8] || cols[10] || "Moving...",
+                        time: cols[12],
+                        bat: cols[2]
+                    });
+                });
+
+            } catch (e) {
+                console.error("CSV Load failed", e);
+            }
+        }
+
+        function createRoute() {
+            const geometry = new THREE.BufferGeometry().setFromPoints(points);
+            const material = new THREE.LineBasicMaterial({ color: 0x444444, transparent: true, opacity: 0.5 });
+            pathLine = new THREE.Line(geometry, material);
+            scene.add(pathLine);
+
+            // Glowing path markers
+            points.forEach((p, i) => {
+                if (i % 10 === 0) {
+                    const dotGeo = new THREE.SphereGeometry(0.05, 8, 8);
+                    const dotMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
+                    const dot = new THREE.Mesh(dotGeo, dotMat);
+                    dot.position.copy(p);
+                    scene.add(dot);
+                }
+            });
+        }
+
+        function createTrain() {
+            // Quantum Train - A glowing neon cube
+            const group = new THREE.Group();
+
+            const coreGeo = new THREE.BoxGeometry(0.5, 0.3, 0.8);
+            const coreMat = new THREE.MeshPhongMaterial({
+                color: 0x000000,
+                emissive: 0xfacc15,
+                emissiveIntensity: 0.5
+            });
+            const body = new THREE.Mesh(coreGeo, coreMat);
+            group.add(body);
+
+            // Neon edges
+            const edges = new THREE.EdgesGeometry(coreGeo);
+            const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0xfacc15 }));
+            group.add(line);
+
+            // Spotlight
+            const light = new THREE.PointLight(0xfacc15, 2, 5);
+            group.add(light);
+
+            train = group;
+            scene.add(train);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const delta = clock.getDelta();
+
+            // Move train
+            if (currentIdx < points.length - 1) {
+                const start = points[currentIdx];
+                const end = points[currentIdx + 1];
+
+                // Speed calculation (simulated)
+                const speed = 5.0;
+                train.position.lerp(end, 0.1);
+
+                if (train.position.distanceTo(end) < 0.1) {
+                    currentIdx++;
+                    updateUI(currentIdx);
+                }
+
+                // Make train look at next point
+                train.lookAt(end);
+            } else {
+                currentIdx = 0; // Loop
+                train.position.copy(points[0]);
+            }
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        function updateUI(idx) {
+            const data = waypointsData[idx];
+            if (!data) return;
+            document.getElementById('current-pos').innerHTML =
+                `Loc: ${data.place} | Time: ${data.time} | Power: ${data.bat}%`;
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+    </script>
+</body>
+
+</html>
