@@ -244,54 +244,101 @@
 
         function createRoute() {
             const geometry = new THREE.BufferGeometry().setFromPoints(points);
-            const material = new THREE.LineBasicMaterial({ color: 0x444444, transparent: true, opacity: 0.5 });
+            const material = new THREE.LineBasicMaterial({ color: 0x555555, transparent: true, opacity: 0.3 });
             pathLine = new THREE.Line(geometry, material);
             scene.add(pathLine);
 
-            // Glowing path markers
+            // Glowing Path & Environment (Game Feel)
             points.forEach((p, i) => {
-                if (i % 10 === 0) {
-                    const dotGeo = new THREE.SphereGeometry(0.05, 8, 8);
-                    const dotMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
+                if (i % 8 === 0) {
+                    // Waypoint markers (Neon Orbs)
+                    const dotGeo = new THREE.SphereGeometry(0.12, 12, 12);
+                    const dotMat = new THREE.MeshBasicMaterial({ color: 0x00f2ff }); // Neon Cyan
                     const dot = new THREE.Mesh(dotGeo, dotMat);
                     dot.position.copy(p);
                     scene.add(dot);
+
+                    // Add some environment (Low-poly trees or crystals)
+                    if (Math.random() > 0.7) {
+                        addDecorativeObject(p);
+                    }
                 }
             });
+        }
+
+        function addDecorativeObject(pos) {
+            const type = Math.random();
+            const container = new THREE.Group();
+
+            if (type > 0.5) {
+                // Low-poly Tree
+                const trunkGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.5);
+                const trunkMat = new THREE.MeshPhongMaterial({ color: 0x3d2b1f });
+                const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+
+                const leavesGeo = new THREE.ConeGeometry(0.4, 0.8, 4);
+                const leavesMat = new THREE.MeshPhongMaterial({ color: 0x22c55e });
+                const leaves = new THREE.Mesh(leavesGeo, leavesMat);
+                leaves.position.y = 0.5;
+
+                container.add(trunk, leaves);
+            } else {
+                // Glowing Crystal
+                const cryGeo = new THREE.OctahedronGeometry(0.3);
+                const cryMat = new THREE.MeshPhongMaterial({
+                    color: 0xa855f7,
+                    emissive: 0xa855f7,
+                    emissiveIntensity: 0.5,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                const crystal = new THREE.Mesh(cryGeo, cryMat);
+                container.add(crystal);
+            }
+
+            container.position.copy(pos);
+            container.position.x += (Math.random() - 0.5) * 5; // Offset from path
+            container.position.z += (Math.random() - 0.5) * 5;
+            container.scale.setScalar(0.5 + Math.random());
+            scene.add(container);
         }
 
         function createTrain() {
             const group = new THREE.Group();
 
-            // Main Body (Locomotive)
+            // Main Body (Vibrant Paint)
             const bodyGeo = new THREE.BoxGeometry(0.5, 0.4, 1.2);
-            const bodyMat = new THREE.MeshPhongMaterial({ color: 0x111111, emissive: 0xfacc15, emissiveIntensity: 0.1 });
+            const bodyMat = new THREE.MeshPhongMaterial({
+                color: 0x3b82f6, // Vibrant Blue
+                emissive: 0x3b82f6,
+                emissiveIntensity: 0.2
+            });
             const body = new THREE.Mesh(bodyGeo, bodyMat);
             body.position.y = 0.25;
             group.add(body);
 
-            // Cabin
-            const cabinGeo = new THREE.BoxGeometry(0.5, 0.4, 0.5);
-            const cabinMat = new THREE.MeshPhongMaterial({ color: 0x222222, emissive: 0xfacc15, emissiveIntensity: 0.2 });
+            // Cabin (Neon Accents)
+            const cabinGeo = new THREE.BoxGeometry(0.52, 0.4, 0.5);
+            const cabinMat = new THREE.MeshPhongMaterial({ color: 0xec4899 }); // Neon Pink
             const cabin = new THREE.Mesh(cabinGeo, cabinMat);
             cabin.position.set(0, 0.6, -0.3);
             group.add(cabin);
 
-            // Chimney
-            const chimneyGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.3, 16);
+            // Chimney with Particles (Smokebox)
+            const chimneyGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.4, 16);
             const chimneyMat = new THREE.MeshPhongMaterial({ color: 0x333333 });
             const chimney = new THREE.Mesh(chimneyGeo, chimneyMat);
             chimney.position.set(0, 0.6, 0.4);
             group.add(chimney);
 
-            // Wheels (6 wheels)
-            const wheelGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.1, 16);
-            const wheelMat = new THREE.MeshPhongMaterial({ color: 0x000000 });
+            // Wheels (Sporty Look)
+            const wheelGeo = new THREE.CylinderGeometry(0.15, 0.15, 0.12, 16);
+            const wheelMat = new THREE.MeshPhongMaterial({ color: 0x111111 });
 
             const wheelPositions = [
-                [-0.26, 0.12, 0.4], [0.26, 0.12, 0.4],
-                [-0.26, 0.12, 0], [0.26, 0.12, 0],
-                [-0.26, 0.12, -0.4], [0.26, 0.12, -0.4]
+                [-0.28, 0.15, 0.4], [0.28, 0.15, 0.4],
+                [-0.28, 0.15, 0], [0.28, 0.15, 0],
+                [-0.28, 0.15, -0.4], [0.28, 0.15, -0.4]
             ];
 
             wheelPositions.forEach(pos => {
@@ -301,24 +348,12 @@
                 group.add(wheel);
             });
 
-            // Neon Accents
-            const neonMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
-            const stripGeo = new THREE.BoxGeometry(0.52, 0.02, 1.22);
-            const strip = new THREE.Mesh(stripGeo, neonMat);
-            strip.position.y = 0.45;
-            group.add(strip);
-
-            // Spotlight (Headlight)
-            const light = new THREE.SpotLight(0xfacc15, 5, 10, Math.PI / 6);
-            light.position.set(0, 0.4, 0.6);
-            light.target.position.set(0, 0.4, 2);
-            group.add(light);
-            group.add(light.target);
-
-            // Point light for glow
-            const pointLight = new THREE.PointLight(0xfacc15, 1, 5);
-            pointLight.position.set(0, 1, 0);
-            group.add(pointLight);
+            // Bright Headlight
+            const headLight = new THREE.SpotLight(0xffffff, 10, 20, Math.PI / 6);
+            headLight.position.set(0, 0.4, 0.6);
+            group.add(headLight);
+            group.add(headLight.target);
+            headLight.target.position.set(0, 0.4, 5);
 
             train = group;
             scene.add(train);
@@ -327,26 +362,29 @@
         function animate() {
             requestAnimationFrame(animate);
 
-            const delta = clock.getDelta();
+            // ปรับความเร็วให้พอดี (Speed Tuning)
+            const speed = 0.08;
 
-            // Move train
             if (currentIdx < points.length - 1) {
-                const start = points[currentIdx];
-                const end = points[currentIdx + 1];
+                const target = points[currentIdx + 1];
+                train.position.lerp(target, speed);
 
-                // Speed calculation (simulated)
-                const speed = 5.0;
-                train.position.lerp(end, 0.1);
-
-                if (train.position.distanceTo(end) < 0.1) {
+                if (train.position.distanceTo(target) < 0.2) {
                     currentIdx++;
                     updateUI(currentIdx);
                 }
 
-                // Make train look at next point
-                train.lookAt(end);
+                // Smooth LookAt
+                const lookTarget = target.clone();
+                train.lookAt(lookTarget);
+
+                // Camera Follow Mode (Game Feel)
+                const relativeCameraOffset = new THREE.Vector3(0, 8, -15);
+                const cameraOffset = relativeCameraOffset.applyMatrix4(train.matrixWorld);
+                camera.position.lerp(cameraOffset, 0.05);
+                controls.target.lerp(train.position, 0.1);
             } else {
-                currentIdx = 0; // Loop
+                currentIdx = 0;
                 train.position.copy(points[0]);
             }
 
