@@ -4,13 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Txur Oracle | 3D Quantum Train</title>
+    <title>Quantum Voxel Railway | Minecraft Style</title>
     <style>
         :root {
-            --bg-color: #bae6fd;
+            --bg-color: #7dd3fc;
             --accent-color: #facc15;
             --glass-bg: rgba(15, 23, 42, 0.85);
-            /* สีนํ้าเงินเข้มโปร่งใส */
             --text-main: #ffffff;
         }
 
@@ -22,7 +21,6 @@
             color: var(--text-main);
         }
 
-        /* Morning UI Card */
         #ui-card {
             position: absolute;
             top: 25px;
@@ -32,7 +30,7 @@
             border-radius: 12px;
             z-index: 100;
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(250, 204, 21, 0.15);
+            border: 2px solid #556b2f;
             min-width: 280px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
@@ -51,38 +49,37 @@
         #train-title {
             margin: 0;
             font-size: 1.1rem;
-            color: #60a5fa;
-            /* สีนํ้าเงินอ่อนแบบในรูป */
-            font-weight: 600;
+            color: #fbbf24;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 800;
         }
 
         #province-name {
             margin: 5px 0;
             font-size: 1.4rem;
             color: #ef4444;
-            /* สีชมพู/แดง แบบลำปางในรูป */
-            font-weight: 600;
+            font-weight: 800;
         }
 
         .time-label {
             color: #4ade80;
-            /* สีเขียวเวลา */
-            font-size: 1rem;
-            font-weight: 600;
+            font-size: 1.1rem;
+            font-weight: 800;
+            font-family: monospace;
         }
 
         .info-details {
             margin-top: 10px;
             font-size: 0.75rem;
-            opacity: 0.8;
+            opacity: 0.9;
             line-height: 1.6;
         }
 
         .info-details span {
-            color: #60a5fa;
+            color: #fbbf24;
         }
 
-        /* Bottom Controls */
         #controls-bar {
             position: absolute;
             bottom: 30px;
@@ -94,30 +91,24 @@
         }
 
         .btn {
-            background: #60a5fa;
-            color: #0f172a;
-            border: none;
+            background: #4ade80;
+            color: #064e3b;
+            border: 2px solid #064e3b;
             padding: 10px 24px;
-            border-radius: 8px;
-            font-weight: 600;
+            border-radius: 4px;
+            font-weight: 800;
             cursor: pointer;
             display: flex;
             align-items: center;
             gap: 8px;
             transition: all 0.2s;
             font-family: 'Outfit', sans-serif;
+            text-transform: uppercase;
         }
 
         .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(96, 165, 250, 0.4);
-        }
-
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.15);
-            color: white;
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+            background: #22c55e;
         }
 
         #loading {
@@ -126,54 +117,45 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: #000;
+            background: #1e293b;
             display: flex;
             justify-content: center;
             align-items: center;
             color: var(--accent-color);
             z-index: 9999;
-            transition: opacity 0.5s;
-        }
-
-        .footer-credit {
-            position: absolute;
-            bottom: 20px;
-            right: 25px;
-            font-size: 0.7rem;
-            opacity: 0.5;
-            color: white;
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: 3px;
         }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
 </head>
 
 <body>
-    <div id="loading">QUANTUM CORE INITIALIZING...</div>
+    <div id="loading">GENERATING VOXEL WORLD...</div>
 
     <div id="ui-card">
         <div class="header-row">
-            <span class="sun-icon">☀️</span>
-            <h2 id="train-title">ขบวน 8 — Antigravity (Morning)</h2>
+            <span class="sun-icon">⛏️</span>
+            <h2 id="train-title">ขบวน 8 — Voxel Express</h2>
         </div>
-        <div id="province-name">กำลังระบุจังหวัด...</div>
-        <div class="time-label" id="current-time">--:--</div>
+        <div id="province-name">Loading Terrain...</div>
+        <div class="time-label" id="current-time">00:00</div>
 
         <div class="info-details">
-            Route: <span>Chiang Mai → Phitsanulok</span><br>
-            Distance: <span>~300 km</span> • Waypoints: <span id="wp-count">330</span><br>
-            Antigravity — The Unseen Force
+            World: <span>Chiang Mai → Phitsanulok</span><br>
+            Style: <span>Minecraft Voxel</span><br>
+            Antigravity — Blocky Force
         </div>
     </div>
 
     <div id="controls-bar">
         <button class="btn" onclick="togglePlay()"><span id="pause-icon">II</span> Pause</button>
-        <button class="btn" onclick="toggleCamera()"><span id="cam-icon">🚂</span> On Train</button>
-        <button class="btn btn-secondary" onclick="resetJourney()">↺ Reset</button>
+        <button class="btn" onclick="toggleCamera()"><span id="cam-icon">🚂</span> Follow</button>
+        <button class="btn" style="background: #fbbf24; color: #78350f; border-color: #78350f;"
+            onclick="resetJourney()">↺ Respawn</button>
     </div>
 
-    <div class="footer-credit">🚂 สร้างโดย Antigravity Oracle — The Unseen Force</div>
-
-    <!-- Three.js CDN -->
     <script type="importmap">
         {
             "imports": {
@@ -188,27 +170,26 @@
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
         let scene, camera, renderer, controls;
-        let pathLine, train, points = [];
-        let waypointsData = [];
+        let train, points = [], waypointsData = [];
         let currentIdx = 0;
         let clock = new THREE.Clock();
         let curve, trainCars = [];
         let isPlaying = true;
         let followTrain = true;
-        let sun;
+        let curveTimer = 0;
+        let steamParticles = [];
 
-        const SCALE = 500; // Scaling factor for coordinates
+        const SCALE = 500;
+        const VOXEL_SIZE = 1;
 
         init();
 
         async function init() {
-            // Setup Scene
             scene = new THREE.Scene();
-            // สีท้องฟ้าแบบธรรมชาติ (Light Sky Blue)
-            scene.background = new THREE.Color(0xbae6fd);
-            scene.fog = new THREE.Fog(0xbae6fd, 100, 1000);
+            scene.background = new THREE.Color(0x7dd3fc);
+            scene.fog = new THREE.Fog(0x7dd3fc, 150, 800);
 
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 8000);
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 5000);
             camera.position.set(0, 100, 200);
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -219,60 +200,32 @@
             controls = new OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
 
-            // Lights (Natural Day Light)
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
-            scene.add(ambientLight);
-
-            const sunLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+            const sunLight = new THREE.DirectionalLight(0xffffff, 1.0);
             sunLight.position.set(100, 200, 100);
             scene.add(sunLight);
 
-            // Natural Grid
-            const grid = new THREE.GridHelper(2000, 100, 0x94a3b8, 0xcbd5e1);
-            grid.position.y = -0.01;
+            // Voxel Ground
+            const groundGroup = new THREE.Group();
+            const grassGeo = new THREE.BoxGeometry(2000, 2, 2000);
+            const grassMat = new THREE.MeshLambertMaterial({ color: 0x556b2f }); // Minecraft Green
+            const grass = new THREE.Mesh(grassGeo, grassMat);
+            grass.position.y = -1.1;
+            scene.add(grass);
+
+            // Grid decoration
+            const grid = new THREE.GridHelper(2000, 100, 0x3b4a20, 0x3b4a20);
+            grid.position.y = -0.05;
             scene.add(grid);
 
-            // Ground Plane (Natural Ground)
-            const groundGeo = new THREE.PlaneGeometry(8000, 8000);
-            const groundMat = new THREE.MeshPhongMaterial({ color: 0x4ade80 }); // Bright Morning Green
-            const ground = new THREE.Mesh(groundGeo, groundMat);
-            ground.rotation.x = -Math.PI / 2;
-            ground.position.y = -0.1;
-            scene.add(ground);
-
-            // THE SUN (Morning Sun)
-            const sunGroup = new THREE.Group();
-            const sunGeo = new THREE.SphereGeometry(20, 32, 32);
-            const sunMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
-            sun = new THREE.Mesh(sunGeo, sunMat);
-
-            // Sun Glow
-            const glowGeo = new THREE.SphereGeometry(25, 32, 32);
-            const glowMat = new THREE.MeshBasicMaterial({ color: 0xfef08a, transparent: true, opacity: 0.3 });
-            const glow = new THREE.Mesh(glowGeo, glowMat);
-
-            sunGroup.add(sun, glow);
-            sunGroup.position.set(-400, 300, -800); // วางไว้ไกลๆ บนฟ้า
-            scene.add(sunGroup);
-
-            // Load Data
             await loadCSV();
 
             if (points.length > 1) {
-                // สร้างเส้นทางด้วย CatmullRomCurve3
                 curve = new THREE.CatmullRomCurve3(points);
-                curve.curveType = 'catmullrom';
-                curve.tension = 0.5;
-
-                createRoute();
-                createTrain();
-
-                // เริ่มต้นที่จุดแรก
-                const startPos = curve.getPoint(0);
-                camera.position.set(startPos.x, 30, startPos.z + 50);
-                controls.target.copy(startPos);
-
+                createEnvironment();
+                createVoxelTrain();
                 animate();
+
                 document.getElementById('loading').style.opacity = '0';
                 setTimeout(() => document.getElementById('loading').remove(), 500);
             }
@@ -281,204 +234,172 @@
         async function loadCSV() {
             try {
                 const response = await fetch('travel-phitsanulok.csv');
-                if (!response.ok) throw new Error("ไม่สามารถโหลดไฟล์ CSV ได้");
                 const data = await response.text();
+                const lines = data.split('\n').slice(1);
 
-                const parseCSV = (str) => {
-                    const arr = [];
-                    let quote = false;
-                    let col = "";
-                    let row = [];
-                    const cleanStr = str.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-                    for (let i = 0; i < cleanStr.length; i++) {
-                        const char = cleanStr[i];
-                        if (char === '"') { quote = !quote; continue; }
-                        if (char === ',' && !quote) { row.push(col.trim()); col = ""; continue; }
-                        if (char === '\n' && !quote) {
-                            if (col || row.length) {
-                                row.push(col.trim());
-                                arr.push(row);
-                            }
-                            col = ""; row = []; continue;
-                        }
-                        col += char;
-                    }
-                    if (col || row.length) { row.push(col.trim()); arr.push(row); }
-                    return arr;
-                };
+                let midLat = 0, midLon = 0, validCount = 0;
+                const rawRows = lines.map(line => line.split(',')).filter(r => r.length > 5 && !isNaN(parseFloat(r[4])));
 
-                const rows = parseCSV(data).slice(1);
-                let midLat = 0, midLon = 0;
-                let validCount = 0;
-                const rawData = rows.filter(c => c.length > 5 && c[4] && c[5] && !isNaN(parseFloat(c[4])));
-
-                rawData.forEach(cols => {
-                    midLat += parseFloat(cols[4]);
-                    midLon += parseFloat(cols[5]);
+                rawRows.forEach(r => {
+                    midLat += parseFloat(r[4]);
+                    midLon += parseFloat(r[5]);
                     validCount++;
                 });
 
-                if (validCount === 0) return;
                 midLat /= validCount;
                 midLon /= validCount;
 
-                rawData.forEach((cols) => {
-                    const lat = parseFloat(cols[4]);
-                    const lon = parseFloat(cols[5]);
+                rawRows.forEach(r => {
+                    const lat = parseFloat(r[4]);
+                    const lon = parseFloat(r[5]);
                     const x = (lon - midLon) * SCALE;
                     const z = (midLat - lat) * SCALE;
-                    const y = 0.1;
-                    points.push(new THREE.Vector3(x, y, z));
-                    // ดึงชื่อจังหวัดจาก address (ตัวอย่าง: "..., Lampang 52190")
-                    const address = cols[11] || "";
-                    const addrParts = address.split(',');
-                    const provinceInfo = addrParts.length > 1 ? addrParts[addrParts.length - 1].trim().split(' ')[0] : (cols[10] || "กำลังเดินทาง...");
+                    points.push(new THREE.Vector3(x, 0.5, z));
+
+                    const addr = r[11] || "";
+                    const省 = addr.split(',').pop().trim().split(' ')[0] || r[10] || "Unknown";
 
                     waypointsData.push({
-                        place: cols[10] || "Unknown",
-                        province: provinceInfo,
-                        time: cols[12]?.split(' ')[1] || "??:??",
-                        bat: cols[2] || "0"
+                        province: 省,
+                        time: r[12]?.split(' ')[1] || "00:00"
                     });
                 });
             } catch (e) {
-                console.error("CSV Load failed", e);
+                console.error("CSV Fail", e);
             }
         }
 
-        function createRoute() {
-            const curvePoints = curve.getPoints(points.length * 12);
-            const geometry = new THREE.BufferGeometry().setFromPoints(curvePoints);
-            const material = new THREE.LineBasicMaterial({ color: 0x3b82f6, transparent: true, opacity: 0.4 });
-            pathLine = new THREE.Line(geometry, material);
-            scene.add(pathLine);
-
-            // Environment (Natural Style - More Trees)
+        function createEnvironment() {
             points.forEach((p, i) => {
-                if (i % 4 === 0) { // เพิ่มความถี่
-                    const dotGeo = new THREE.SphereGeometry(0.15, 12, 12);
-                    const dotMat = new THREE.MeshPhongMaterial({ color: 0x60a5fa, emissive: 0x60a5fa, emissiveIntensity: 0.3 });
-                    const dot = new THREE.Mesh(dotGeo, dotMat);
-                    dot.position.copy(p);
-                    scene.add(dot);
-
-                    // สุ่มต้นไม้ให้เยอะขึ้น
-                    if (Math.random() > 0.4) addDecorativeObject(p);
-                    if (Math.random() > 0.7) addDecorativeObject(p);
+                if (i % 8 === 0) {
+                    if (Math.random() > 0.4) createVoxelTree(p);
+                    if (Math.random() > 0.8) createVoxelMountain(p);
                 }
             });
         }
 
-        function addDecorativeObject(pos) {
-            const type = Math.random();
-            const container = new THREE.Group();
-            if (type > 0.5) {
-                const trunkGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.5);
-                const trunkMat = new THREE.MeshPhongMaterial({ color: 0x3d2b1f });
-                const trunk = new THREE.Mesh(trunkGeo, trunkMat);
-                const leavesGeo = new THREE.ConeGeometry(0.4, 0.8, 4);
-                const leavesMat = new THREE.MeshPhongMaterial({ color: 0x22c55e });
-                const leaves = new THREE.Mesh(leavesGeo, leavesMat);
-                leaves.position.y = 0.5;
-                container.add(trunk, leaves);
-            } else {
-                const cryGeo = new THREE.OctahedronGeometry(0.3);
-                const cryMat = new THREE.MeshPhongMaterial({
-                    color: 0xa855f7, emissive: 0xa855f7, emissiveIntensity: 0.5, transparent: true, opacity: 0.8
-                });
-                container.add(new THREE.Mesh(cryGeo, cryMat));
-            }
-            container.position.copy(pos);
-            container.position.x += (Math.random() - 0.5) * 5;
-            container.position.z += (Math.random() - 0.5) * 5;
-            container.scale.setScalar(0.5 + Math.random());
-            scene.add(container);
+        function createVoxelTree(pos) {
+            const group = new THREE.Group();
+
+            // Trunk
+            const trunkGeo = new THREE.BoxGeometry(0.5, 2, 0.5);
+            const trunkMat = new THREE.MeshLambertMaterial({ color: 0x4a3728 });
+            const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+            trunk.position.y = 1;
+            group.add(trunk);
+
+            // Leaves
+            const leaveMat = new THREE.MeshLambertMaterial({ color: 0x2d4c1e });
+            const layer1 = new THREE.Mesh(new THREE.BoxGeometry(2, 1, 2), leaveMat);
+            layer1.position.y = 2.5;
+            group.add(layer1);
+
+            const layer2 = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.8, 1.2), leaveMat);
+            layer2.position.y = 3.3;
+            group.add(layer2);
+
+            group.position.copy(pos);
+            group.position.x += (Math.random() - 0.5) * 15;
+            group.position.z += (Math.random() - 0.5) * 15;
+            scene.add(group);
         }
 
-        function createTrain() {
+        function createVoxelMountain(pos) {
+            const group = new THREE.Group();
+            const mat = new THREE.MeshLambertMaterial({ color: 0x4b5563 });
+
+            const baseSize = 4 + Math.random() * 6;
+            for (let h = 0; h < 3; h++) {
+                const s = baseSize - h * 2;
+                if (s <= 0) break;
+                const block = new THREE.Mesh(new THREE.BoxGeometry(s, 2, s), mat);
+                block.position.y = h * 2;
+                group.add(block);
+            }
+
+            group.position.copy(pos);
+            const side = Math.random() > 0.5 ? 25 : -25;
+            group.position.x += side + (Math.random() - 0.5) * 10;
+            group.position.z += (Math.random() - 0.5) * 10;
+            scene.add(group);
+        }
+
+        function createVoxelTrain() {
             train = new THREE.Group();
-            trainCars = [];
-            const loco = createCarriage(0x3b82f6, true);
-            train.add(loco);
-            trainCars.push(loco);
-            const colors = [0xf97316, 0xef4444, 0x8b5cf6];
-            for (let i = 0; i < 3; i++) {
-                const car = createCarriage(colors[i % colors.length], false);
+            const colors = [0x3b82f6, 0xef4444, 0xfacc15, 0x10b981];
+
+            for (let i = 0; i < 4; i++) {
+                const car = createVoxelCar(colors[i], i === 0);
                 train.add(car);
                 trainCars.push(car);
             }
             scene.add(train);
         }
 
-        function createCarriage(color, isLoco) {
+        function createVoxelCar(color, isLoco) {
             const group = new THREE.Group();
-            const bodyGeo = new THREE.BoxGeometry(0.6, 0.5, 1.4);
-            const bodyMat = new THREE.MeshPhongMaterial({ color: color });
-            const body = new THREE.Mesh(bodyGeo, bodyMat);
-            body.position.y = 0.3;
+
+            // Body
+            const body = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1, 2.2), new THREE.MeshLambertMaterial({ color }));
+            body.position.y = 0.8;
             group.add(body);
+
             if (isLoco) {
-                const cabinGeo = new THREE.BoxGeometry(0.62, 0.4, 0.6);
-                const cabinMat = new THREE.MeshPhongMaterial({ color: 0x1e293b });
-                const cabin = new THREE.Mesh(cabinGeo, cabinMat);
-                cabin.position.set(0, 0.7, -0.3);
+                // Cabin
+                const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.8, 1), new THREE.MeshLambertMaterial({ color: 0x1e293b }));
+                cabin.position.set(0, 1.7, -0.4);
                 group.add(cabin);
-                const chimneyGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.4, 16);
-                const chimneyMat = new THREE.MeshPhongMaterial({ color: 0x334155 });
-                const chimney = new THREE.Mesh(chimneyGeo, chimneyMat);
-                chimney.position.set(0, 0.7, 0.4);
+
+                // Chimney
+                const chimney = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.8, 0.4), new THREE.MeshLambertMaterial({ color: 0x000000 }));
+                chimney.position.set(0, 1.7, 0.6);
                 group.add(chimney);
-                const headLight = new THREE.SpotLight(0xffffff, 15, 30, Math.PI / 6);
-                headLight.position.set(0, 0.5, 0.7);
-                group.add(headLight);
-                group.add(headLight.target);
-                headLight.target.position.set(0, 0.5, 10);
-            } else {
-                const winGeo = new THREE.BoxGeometry(0.62, 0.15, 0.2);
-                const winMat = new THREE.MeshPhongMaterial({ color: 0xbae6fd });
-                [-0.3, 0.1, 0.5].forEach(z => {
-                    const winSide = new THREE.Mesh(winGeo, winMat);
-                    winSide.position.set(0, 0.45, z);
-                    group.add(winSide);
-                });
             }
-            const wheelGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.12, 16);
-            const wheelMat = new THREE.MeshPhongMaterial({ color: 0x0f172a });
-            [[-0.3, 0.18, 0.5], [0.3, 0.18, 0.5], [-0.3, 0.18, -0.5], [0.3, 0.18, -0.5]].forEach(pos => {
-                const wheel = new THREE.Mesh(wheelGeo, wheelMat);
-                wheel.rotation.z = Math.PI / 2;
-                wheel.position.set(...pos);
+
+            // Wheels (Square Wheels for Voxel feel)
+            const wheelMat = new THREE.MeshLambertMaterial({ color: 0x111827 });
+            [[-0.6, 0.3, 0.7], [0.6, 0.3, 0.7], [-0.6, 0.3, -0.7], [0.6, 0.3, -0.7]].forEach(p => {
+                const wheel = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.4, 0.4), wheelMat);
+                wheel.position.set(...p);
                 group.add(wheel);
             });
+
             return group;
         }
 
-        let curveTimer = 0;
-        const CAR_OFFSET = 0.0035; // ลดระยะให้ติดกัน (Realistic)
+        function createSteam(pos) {
+            const mat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.6 });
+            const p = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.3), mat);
+            p.position.copy(pos);
+            p.position.y += 2.2;
+            scene.add(p);
+            steamParticles.push({
+                mesh: p,
+                life: 1.0,
+                vel: new THREE.Vector3((Math.random() - 0.5) * 0.1, 0.1 + Math.random() * 0.1, (Math.random() - 0.5) * 0.1)
+            });
+        }
 
         function animate() {
             requestAnimationFrame(animate);
             const delta = clock.getDelta();
 
-            if (!isPlaying) return;
+            if (isPlaying && curve) {
+                curveTimer += delta * 0.012;
+                if (curveTimer > 1) curveTimer = 0;
 
-            // ใช้ delta เพื่อความเร็วคงที่เสมอ
-            curveTimer += delta * 0.012;
-            if (curveTimer > 1) curveTimer = 0;
-
-            if (curve && trainCars.length > 0) {
+                const OFFSET = 0.005;
                 trainCars.forEach((car, i) => {
-                    const t = (curveTimer - (i * CAR_OFFSET) + 1) % 1;
+                    const t = (curveTimer - (i * OFFSET) + 1) % 1;
                     const pos = curve.getPointAt(t);
+                    const lookAtT = (t + 0.002) % 1;
+                    const lookPos = curve.getPointAt(lookAtT);
 
-                    // หาจุดข้างหน้าเพื่อการหมุนที่ลื่นตัวขึ้น
-                    const lookT = (t + 0.002) % 1;
-                    const nextPos = curve.getPointAt(lookT);
-
-                    // ใช้ Lerp สำหรับตำแหน่งเพื่อแก้ปัญหาการ "กระชาก"
-                    car.position.lerp(pos, 0.25);
-                    car.lookAt(nextPos);
+                    car.position.lerp(pos, 0.2);
+                    car.lookAt(lookPos);
                 });
+
+                if (Math.random() > 0.7) createSteam(trainCars[0].position);
 
                 const currentPointIdx = Math.floor(curveTimer * points.length);
                 if (currentPointIdx !== currentIdx) {
@@ -486,17 +407,26 @@
                     updateUI(currentIdx % points.length);
                 }
 
-                const headCar = trainCars[0];
-                if (headCar && followTrain) {
-                    const relativeCameraOffset = new THREE.Vector3(0, 12, -30);
-                    const cameraOffset = relativeCameraOffset.applyMatrix4(headCar.matrixWorld);
-                    camera.position.lerp(cameraOffset, 0.06);
-                    controls.target.lerp(headCar.position, 0.1);
+                if (followTrain) {
+                    const head = trainCars[0];
+                    const offset = new THREE.Vector3(0, 15, -35).applyMatrix4(head.matrixWorld);
+                    camera.position.lerp(offset, 0.1);
+                    controls.target.lerp(head.position, 0.1);
                 }
             }
 
-            // ขยับพระอาทิตย์เล็กน้อยตามเวลา (Optional)
-            if (sun) sun.parent.rotation.y += 0.0001;
+            // Update Steam
+            for (let i = steamParticles.length - 1; i >= 0; i--) {
+                const sp = steamParticles[i];
+                sp.mesh.position.add(sp.vel);
+                sp.mesh.scale.multiplyScalar(1.02);
+                sp.life -= 0.02;
+                sp.mesh.material.opacity = sp.life * 0.6;
+                if (sp.life <= 0) {
+                    scene.remove(sp.mesh);
+                    steamParticles.splice(i, 1);
+                }
+            }
 
             controls.update();
             renderer.render(scene, camera);
@@ -505,12 +435,10 @@
         function updateUI(idx) {
             const data = waypointsData[idx];
             if (!data) return;
-            document.getElementById('province-name').innerText = data.province || "กำลังเดินทาง...";
-            document.getElementById('current-time').innerText = data.time || "--:--";
-            document.getElementById('wp-count').innerText = points.length;
+            document.getElementById('province-name').innerText = data.province;
+            document.getElementById('current-time').innerText = data.time;
         }
 
-        // Control Functions
         window.togglePlay = () => {
             isPlaying = !isPlaying;
             document.getElementById('pause-icon').innerText = isPlaying ? "II" : "▶";
@@ -518,13 +446,11 @@
 
         window.toggleCamera = () => {
             followTrain = !followTrain;
-            document.getElementById('cam-icon').innerText = followTrain ? "🚂" : "🎥";
         };
 
         window.resetJourney = () => {
             curveTimer = 0;
             isPlaying = true;
-            document.getElementById('pause-icon').innerText = "II";
         };
 
         window.addEventListener('resize', () => {
@@ -532,7 +458,6 @@
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
-
     </script>
 </body>
 
