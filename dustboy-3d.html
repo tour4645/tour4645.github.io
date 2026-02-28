@@ -4,13 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quantum DustBoy 3D | Real-time Data Visualization</title>
+    <title>Quantum DustBoy 3D | Ultimate Visual</title>
     <style>
         :root {
             --accent: #00f3ff;
             --danger: #ff0055;
-            --bg: #050505;
-            --glass: rgba(15, 23, 42, 0.8);
+            --bg: #020617;
+            --glass: rgba(15, 23, 42, 0.82);
         }
 
         body {
@@ -31,72 +31,66 @@
 
         .card {
             background: var(--glass);
-            padding: 20px;
-            border-radius: 12px;
-            border: 1px solid rgba(0, 243, 255, 0.3);
-            backdrop-filter: blur(10px);
-            margin-bottom: 15px;
+            padding: 24px;
+            border-radius: 16px;
+            border: 1px solid rgba(0, 243, 255, 0.25);
+            backdrop-filter: blur(15px);
+            margin-bottom: 20px;
             pointer-events: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
         }
 
         h1 {
             margin: 0;
-            font-size: 1.4rem;
+            font-size: 1.5rem;
             color: var(--accent);
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
+            font-weight: 700;
+            text-shadow: 0 0 15px rgba(0, 243, 255, 0.5);
         }
 
         .status {
-            font-size: 0.8rem;
-            opacity: 0.7;
+            font-size: 0.85rem;
             display: flex;
             align-items: center;
-            gap: 8px;
-            margin-top: 5px;
+            gap: 10px;
+            margin-top: 10px;
+            letter-spacing: 1px;
         }
 
         .dot {
-            width: 8px;
-            height: 8px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
-            background: #555;
+            background: #334155;
+            transition: all 0.5s;
         }
 
         .dot.active {
             background: var(--accent);
-            box-shadow: 0 0 10px var(--accent);
+            box-shadow: 0 0 15px var(--accent);
         }
 
         #leaderboard {
             position: absolute;
             top: 20px;
             right: 20px;
-            width: 280px;
+            width: 300px;
             z-index: 100;
         }
 
         .stat-item {
             display: flex;
             justify-content: space-between;
-            padding: 8px 0;
+            padding: 10px 0;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            font-size: 0.85rem;
+            font-size: 0.9rem;
         }
 
         .pm25-val {
-            font-weight: bold;
-            color: var(--accent);
-        }
-
-        #controls {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 15px;
-            z-index: 100;
+            font-weight: 800;
+            font-family: monospace;
         }
 
         #loading {
@@ -111,20 +105,22 @@
             align-items: center;
             z-index: 9999;
             color: var(--accent);
-            font-size: 1.2rem;
+            font-size: 1.4rem;
+            letter-spacing: 5px;
+            font-weight: 700;
+            transition: opacity 0.8s;
         }
 
         .legend {
             position: absolute;
             bottom: 20px;
             left: 20px;
-            font-size: 0.7rem;
-            opacity: 0.6;
+            font-size: 0.75rem;
+            opacity: 0.5;
+            letter-spacing: 1px;
         }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap" rel="stylesheet">
-
-    <!-- Dependencies -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 
@@ -146,21 +142,23 @@
             <h1>DUSTBOY 3D VISUAL</h1>
             <div class="status">
                 <div id="status-dot" class="dot"></div>
-                <span id="status-text">Connecting to WSS Bridge...</span>
+                <span id="status-text">CONNECTING TO WSS...</span>
             </div>
-            <div style="margin-top: 15px; font-size: 0.8rem; opacity: 0.8;">
+            <div style="margin-top: 15px; font-size: 0.8rem; opacity: 0.7; line-height: 1.6;">
                 Real-time Cyber City of Air Quality<br>
-                Height = PM2.5 Level
+                Height & Color = PM2.5 Level
             </div>
         </div>
     </div>
 
     <div id="leaderboard">
         <div class="card">
-            <div style="font-weight: bold; font-size: 0.9rem; margin-bottom: 10px; color: var(--accent);">HOTSPOTS
-                (PM2.5)</div>
+            <div
+                style="font-weight: 800; font-size: 0.95rem; margin-bottom: 15px; color: var(--accent); letter-spacing: 2px;">
+                LIVE DATA STREAMing
+            </div>
             <div id="hotspot-list">
-                <div style="font-size: 0.8rem; opacity: 0.5;">Scanning stations...</div>
+                <div style="font-size: 0.8rem; opacity: 0.5;">Scanning Quantum Lattice...</div>
             </div>
         </div>
     </div>
@@ -175,6 +173,9 @@
 
         let scene, camera, renderer, controls;
         let towers = {};
+        let starField;
+        let scanLine;
+        let dataRings = [];
 
         init3D();
         initMQTT();
@@ -183,12 +184,12 @@
             try {
                 scene = new THREE.Scene();
                 scene.background = new THREE.Color(0x020617);
-                scene.fog = new THREE.Fog(0x020617, 20, 150);
+                scene.fog = new THREE.Fog(0x020617, 10, 250);
 
-                camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-                camera.position.set(40, 40, 40);
+                camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2500);
+                camera.position.set(60, 60, 60);
 
-                renderer = new THREE.WebGLRenderer({ antialias: true });
+                renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
                 renderer.setSize(window.innerWidth, window.innerHeight);
                 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
                 document.body.appendChild(renderer.domElement);
@@ -196,163 +197,198 @@
                 controls = new OrbitControls(camera, renderer.domElement);
                 controls.enableDamping = true;
                 controls.autoRotate = true;
-                controls.autoRotateSpeed = 0.5;
+                controls.autoRotateSpeed = 0.4;
+                controls.maxDistance = 300;
+                controls.minDistance = 20;
 
-                // Lights
-                const ambient = new THREE.AmbientLight(0xffffff, 0.5);
-                scene.add(ambient);
+                // Lighting
+                scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+                const pLight = new THREE.PointLight(0x00f3ff, 10, 300);
+                pLight.position.set(0, 150, 0);
+                scene.add(pLight);
 
-                const pointLight = new THREE.PointLight(0x00f3ff, 2, 100);
-                pointLight.position.set(10, 50, 10);
-                scene.add(pointLight);
+                // ULTRA: Cosmic Starfield
+                const starGeo = new THREE.BufferGeometry();
+                const starCount = 8000;
+                const starPos = new Float32Array(starCount * 3);
+                for (let i = 0; i < starCount * 3; i++) {
+                    starPos[i] = (Math.random() - 0.5) * 1500;
+                }
+                starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+                const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.8, transparent: true, opacity: 0.6 });
+                starField = new THREE.Points(starGeo, starMat);
+                scene.add(starField);
 
-                // Neon Grid
-                const grid = new THREE.GridHelper(300, 60, 0x00f3ff, 0x0f172a);
+                // Cyber Grid
+                const grid = new THREE.GridHelper(600, 100, 0x00f3ff, 0x0a101f);
                 grid.position.y = -0.1;
                 scene.add(grid);
 
+                // Scanline Effect
+                const scanGeo = new THREE.PlaneGeometry(600, 4);
+                const scanMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff, transparent: true, opacity: 0.08, side: THREE.DoubleSide });
+                scanLine = new THREE.Mesh(scanGeo, scanMat);
+                scanLine.rotation.x = Math.PI / 2;
+                scene.add(scanLine);
+
                 animate();
 
-                // Hide loading
-                document.getElementById('loading').style.opacity = '0';
-                setTimeout(() => {
-                    document.getElementById('loading').style.display = 'none';
-                }, 500);
+                const loader = document.getElementById('loading');
+                loader.style.opacity = '0';
+                setTimeout(() => loader.style.display = 'none', 800);
             } catch (err) {
-                console.error("Init3D failed:", err);
-                document.getElementById('loading').innerText = "ERROR INITIALIZING CORE: " + err.message;
+                console.error("3D Error:", err);
+                document.getElementById('loading').innerText = "FATAL: " + err.message;
             }
+        }
+
+        function createRing(pos, color) {
+            const ringGeo = new THREE.RingGeometry(0.5, 0.8, 32);
+            const ringMat = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.7, side: THREE.DoubleSide });
+            const ring = new THREE.Mesh(ringGeo, ringMat);
+            ring.position.copy(pos);
+            ring.position.y = 0.3;
+            ring.rotation.x = Math.PI / 2;
+            scene.add(ring);
+            dataRings.push({ mesh: ring, scale: 1, opacity: 0.7 });
         }
 
         function createTower(id, name) {
             const group = new THREE.Group();
 
-            // Base/Foundation
-            const baseGeo = new THREE.BoxGeometry(1.5, 0.2, 1.5);
-            const baseMat = new THREE.MeshPhongMaterial({ color: 0x1e293b, emissive: 0x00f3ff, emissiveIntensity: 0.1 });
+            // Core Base
+            const baseGeo = new THREE.CylinderGeometry(1.5, 1.8, 0.3, 6);
+            const baseMat = new THREE.MeshPhongMaterial({ color: 0x0f172a, emissive: 0x00f3ff, emissiveIntensity: 0.3 });
             const base = new THREE.Mesh(baseGeo, baseMat);
             group.add(base);
 
-            // The main data bar
-            const barGeo = new THREE.BoxGeometry(1, 1, 1);
+            // Data Crystal (Main Bar)
+            const barGeo = new THREE.CylinderGeometry(0.8, 0.8, 1, 6);
             const barMat = new THREE.MeshPhongMaterial({
-                color: 0x00f3ff,
-                transparent: true,
-                opacity: 0.7,
-                emissive: 0x00f3ff,
-                emissiveIntensity: 0.3
+                color: 0x00f3ff, transparent: true, opacity: 0.6,
+                emissive: 0x00f3ff, emissiveIntensity: 0.5, shininess: 100
             });
             const bar = new THREE.Mesh(barGeo, barMat);
             bar.position.y = 0.5;
             group.add(bar);
 
-            // Glow Top
-            const topGeo = new THREE.BoxGeometry(1.1, 0.1, 1.1);
+            // Signal Hub (Top Cap)
+            const topGeo = new THREE.SphereGeometry(0.9, 8, 8);
             const topMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff });
             const top = new THREE.Mesh(topGeo, topMat);
             top.position.y = 1;
             group.add(top);
 
-            // Position (Random field)
+            // Satellite Cube
+            const satGeo = new THREE.BoxGeometry(0.4, 0.4, 0.4);
+            const satMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            const sat = new THREE.Mesh(satGeo, satMat);
+            group.add(sat);
+
+            // Random Position
             const angle = Math.random() * Math.PI * 2;
-            const radius = 15 + Math.random() * 50;
-            group.position.x = Math.cos(angle) * radius;
-            group.position.z = Math.sin(angle) * radius;
+            const radius = 30 + Math.random() * 80;
+            group.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
 
             scene.add(group);
-            return { group, bar, top, val: 0, name };
+            return { group, bar, top, sat, val: 0, name, color: 0x00f3ff };
         }
 
         function updateTower(id, pm25, name) {
-            if (!towers[id]) {
-                towers[id] = createTower(id, name);
-            }
+            if (!towers[id]) towers[id] = createTower(id, name);
 
             const tower = towers[id];
             tower.val = pm25;
 
-            // Color based on PM2.5
-            let color = 0x00f3ff;
-            if (pm25 > 25) color = 0x4ade80;
-            if (pm25 > 37) color = 0xfacc15;
-            if (pm25 > 50) color = 0xf97316;
-            if (pm25 > 90) color = 0xff0055;
+            // Multi-color Cyber Gradient
+            let color = 0x00f3ff; // Cyan
+            if (pm25 > 25) color = 0x10b981; // Green
+            if (pm25 > 37) color = 0xf59e0b; // Amber
+            if (pm25 > 50) color = 0xef4444; // Red
+            if (pm25 > 90) color = 0xa855f7; // Purple (Critical)
+            tower.color = color;
 
-            // Animation
-            const targetHeight = Math.max(0.5, pm25 / 2);
+            const targetHeight = Math.max(1.0, pm25 / 1.2);
 
-            gsap.to(tower.bar.scale, { y: targetHeight, duration: 1.2, ease: "power2.out" });
-            gsap.to(tower.bar.position, { y: targetHeight / 2, duration: 1.2, ease: "power2.out" });
-            gsap.to(tower.top.position, { y: targetHeight, duration: 1.2, ease: "power2.out" });
+            gsap.to(tower.bar.scale, { y: targetHeight, duration: 2.5, ease: "elastic.out(1, 0.4)" });
+            gsap.to(tower.bar.position, { y: targetHeight / 2, duration: 2.5, ease: "elastic.out(1, 0.4)" });
+            gsap.to(tower.top.position, { y: targetHeight, duration: 2.5, ease: "elastic.out(1, 0.4)" });
 
             tower.bar.material.color.setHex(color);
             tower.bar.material.emissive.setHex(color);
             tower.top.material.color.setHex(color);
 
+            // Pulse Wave on arrival
+            if (Math.random() > 0.6) createRing(tower.group.position, color);
+
             updateLeaderboard();
         }
 
         function updateLeaderboard() {
-            const list = Object.values(towers)
-                .sort((a, b) => b.val - a.val)
-                .slice(0, 10);
-
+            const list = Object.values(towers).sort((a, b) => b.val - a.val).slice(0, 12);
             const container = document.getElementById('hotspot-list');
             container.innerHTML = list.map(t => `
                 <div class="stat-item">
-                    <span title="${t.name}">${t.name.substring(0, 15)}${t.name.length > 15 ? '..' : ''}</span>
-                    <span class="pm25-val">${t.val.toFixed(1)}</span>
+                    <span title="${t.name}">${t.name.substring(0, 18)}${t.name.length > 18 ? '..' : ''}</span>
+                    <span class="pm25-val" style="color: #${t.color.toString(16).padStart(6, '0')}">${t.val.toFixed(1)}</span>
                 </div>
             `).join('');
         }
 
         function initMQTT() {
-            const BROKER = 'wss://dustboy-wss-bridge.laris.workers.dev/mqtt';
-            const TOPIC = 'DUSTBOY/+/+/+/status';
-
             try {
-                const client = mqtt.connect(BROKER);
-                const statusDot = document.getElementById('status-dot');
-                const statusText = document.getElementById('status-text');
-
+                const client = mqtt.connect('wss://dustboy-wss-bridge.laris.workers.dev/mqtt');
                 client.on('connect', () => {
-                    statusDot.classList.add('active');
-                    statusText.innerText = 'Quantum Grid Active - Receiving Data';
-                    client.subscribe(TOPIC);
+                    document.getElementById('status-dot').classList.add('active');
+                    document.getElementById('status-text').innerText = 'QUANTUM GRID ACTIVE - STREAMING DATA';
+                    client.subscribe('DUSTBOY/+/+/+/status');
                 });
-
-                client.on('message', (topic, message) => {
-                    try {
-                        const data = JSON.parse(message.toString());
-                        const id = topic.split('/')[2];
-                        const name = data.nickname || data.nickname_en || `Station ${id}`;
-                        const pm25 = parseFloat(data.pm25) || 0;
-                        updateTower(id, pm25, name);
-                    } catch (e) { }
+                client.on('message', (topic, msg) => {
+                    const data = JSON.parse(msg.toString());
+                    const id = topic.split('/')[2];
+                    updateTower(id, parseFloat(data.pm25) || 0, data.nickname || data.nickname_en || `ID-${id}`);
                 });
-
-                client.on('error', (err) => {
-                    statusText.innerText = 'Connection Error: ' + err.message;
-                });
-            } catch (err) {
-                console.error("MQTT Init failed:", err);
-            }
+            } catch (e) { console.error("MQTT Error:", e); }
         }
 
         function animate() {
             requestAnimationFrame(animate);
+            const time = Date.now() * 0.001;
             if (controls) controls.update();
+            if (starField) starField.rotation.y += 0.0003;
+            if (scanLine) scanLine.position.z = Math.sin(time * 0.4) * 250;
+
+            for (let i = dataRings.length - 1; i >= 0; i--) {
+                const ring = dataRings[i];
+                ring.scale += 0.2;
+                ring.opacity -= 0.012;
+                ring.mesh.scale.set(ring.scale, ring.scale, 1);
+                ring.mesh.material.opacity = ring.opacity;
+                if (ring.opacity <= 0) {
+                    scene.remove(ring.mesh);
+                    dataRings.splice(i, 1);
+                }
+            }
+
+            Object.values(towers).forEach(t => {
+                const speed = 1.5 + (t.val * 0.05);
+                t.sat.position.set(
+                    Math.cos(time * speed) * 3,
+                    t.bar.scale.y + Math.sin(time * speed * 1.5) * 0.8 + 1.2,
+                    Math.sin(time * speed) * 3
+                );
+                t.sat.rotation.y += 0.1;
+                t.sat.rotation.z += 0.05;
+            });
+
             if (renderer && scene && camera) renderer.render(scene, camera);
         }
 
         window.addEventListener('resize', () => {
-            if (camera) {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-            }
-            if (renderer) renderer.setSize(window.innerWidth, window.innerHeight);
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
         });
-
     </script>
 </body>
 
