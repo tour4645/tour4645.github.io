@@ -4,13 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quantum Star Interactive | 3D Space Lab</title>
+    <title>Quantum DustBoy Planets | Data Interactive Game</title>
     <style>
         :root {
             --accent: #00f3ff;
             --gold: #facc15;
+            --danger: #ff0055;
             --bg: #020617;
-            --glass: rgba(15, 23, 42, 0.82);
+            --glass: rgba(15, 23, 42, 0.85);
         }
 
         body {
@@ -33,31 +34,85 @@
             background: var(--glass);
             padding: 24px;
             border-radius: 16px;
-            border: 1px solid rgba(0, 243, 255, 0.25);
-            backdrop-filter: blur(15px);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            backdrop-filter: blur(20px);
             pointer-events: auto;
             max-width: 320px;
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.6);
         }
 
         h1 {
             margin: 0;
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             color: var(--accent);
             text-transform: uppercase;
             letter-spacing: 2px;
             font-weight: 800;
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.4);
         }
 
         .instruction {
             margin-top: 15px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             opacity: 0.8;
             line-height: 1.6;
         }
 
         .highlight-text {
             color: var(--gold);
+            font-weight: 700;
+        }
+
+        #status-stream {
+            margin-top: 10px;
+            font-size: 0.75rem;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+
+            50% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+        }
+
+        #planet-info {
+            position: absolute;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 30px;
+            background: var(--glass);
+            border-radius: 40px;
+            border: 1px solid var(--accent);
             font-weight: 600;
+            font-size: 1rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 100;
+            white-space: nowrap;
         }
 
         #loading {
@@ -74,13 +129,13 @@
             color: var(--accent);
             font-size: 1.4rem;
             letter-spacing: 5px;
-            transition: opacity 0.8s;
+            font-weight: 800;
         }
 
         .btn-back {
             position: absolute;
-            bottom: 20px;
-            right: 20px;
+            top: 25px;
+            right: 25px;
             background: var(--glass);
             color: white;
             padding: 12px 24px;
@@ -90,14 +145,18 @@
             font-size: 0.9rem;
             transition: all 0.3s;
             z-index: 100;
+            backdrop-filter: blur(10px);
         }
 
         .btn-back:hover {
-            background: rgba(255, 255, 255, 0.1);
             border-color: var(--accent);
+            background: rgba(0, 243, 255, 0.1);
         }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
     <script type="importmap">
         {
             "imports": {
@@ -109,21 +168,28 @@
 </head>
 
 <body>
-    <div id="loading">IGNITING QUANTUM STARS...</div>
+    <div id="loading">QUANTUM DATA SYNCING...</div>
 
     <div id="ui-overlay">
         <div class="card">
-            <h1>STAR LAB 3D</h1>
+            <h1>DUSTBOY PLANETS</h1>
+            <div id="status-stream">
+                <div class="pulse-dot"></div>
+                <span>STREAMING REAL-TIME DATA</span>
+            </div>
             <div class="instruction">
-                ยินดีต้อนรับสู่ห้องแล็บจัดระเบียบจักรวาล!<br><br>
-                🌌 <span class="highlight-text">หยิบดวงดาว:</span> คลิกค้างเพื่อหยิบ<br>
-                🎯 <span class="highlight-text">ย้ายตำแหน่ง:</span> ลากไปยังจุดที่ต้องการ<br>
-                🔄 <span class="highlight-text">มุมมอง:</span> คลิกขวาลากเพื่อหมุนมุมกล้อง
+                แต่ละ "ดาวเคราะห์" คือสถานีวัดฝุ่นจริง!<br><br>
+                🪐 <span class="highlight-text">ขนาดของดาว:</span> เปลี่ยนตามค่า PM2.5<br>
+                💧 <span class="highlight-text">สีน้ำนวล:</span> หยิบและวางได้นุ่มนวลที่สุด<br>
+                🛰️ <span class="highlight-text">การควบคุม:</span> <span style="font-size: 0.8rem;">(L-Click) หยิบย้าย |
+                    (R-Click) หมุนกล้อง</span>
             </div>
         </div>
     </div>
 
-    <a href="index.html" class="btn-back">กลับหน้าแดชบอร์ด</a>
+    <div id="planet-info">Station: Waiting for Data...</div>
+
+    <a href="index.html" class="btn-back">⬅️ EXIT TO HUB</a>
 
     <script type="module">
         import * as THREE from 'three';
@@ -131,131 +197,188 @@
         import { DragControls } from 'three/addons/controls/DragControls.js';
 
         let scene, camera, renderer, orbit, drag;
-        let stars = [];
-        let starGroup;
+        let planetMeshes = [];
+        let planets = {}; // Data storage for stations
+        let starField;
 
         init();
+        initMQTT();
 
         function init() {
-            // Scene Setup
+            // Scene & Camera
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x020617);
+            scene.fog = new THREE.Fog(0x020617, 50, 400);
 
-            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
-            camera.position.set(0, 50, 100);
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 3000);
+            camera.position.set(0, 100, 200);
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             document.body.appendChild(renderer.domElement);
 
-            // Orbit Controls (For Camera rotation)
+            // Orbit Controls (Right click only for rotation)
             orbit = new OrbitControls(camera, renderer.domElement);
             orbit.enableDamping = true;
-            orbit.dampingFactor = 0.05;
             orbit.mouseButtons = {
-                LEFT: null, // Disable left click for orbit so drag can work
+                LEFT: null,
                 MIDDLE: THREE.MOUSE.DOLLY,
                 RIGHT: THREE.MOUSE.ROTATE
             };
 
             // Lights
-            scene.add(new THREE.AmbientLight(0xffffff, 0.3));
-            const pLight = new THREE.PointLight(0x00f3ff, 10, 500);
-            pLight.position.set(50, 200, 50);
-            scene.add(pLight);
+            scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+            const sunLight = new THREE.PointLight(0xffffff, 15, 600);
+            sunLight.position.set(50, 200, 50);
+            scene.add(sunLight);
 
             // Back Starfield
             const starGeo = new THREE.BufferGeometry();
-            const starCount = 6000;
+            const starCount = 8000;
             const starPos = new Float32Array(starCount * 3);
             for (let i = 0; i < starCount * 3; i++) {
-                starPos[i] = (Math.random() - 0.5) * 1200;
+                starPos[i] = (Math.random() - 0.5) * 1800;
             }
             starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
-            const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.6, transparent: true, opacity: 0.5 });
-            scene.add(new THREE.Points(starGeo, starMat));
+            const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.8, transparent: true, opacity: 0.6 });
+            starField = new THREE.Points(starGeo, starMat);
+            scene.add(starField);
 
-            // Grid Planet
-            const grid = new THREE.GridHelper(400, 40, 0x00f3ff, 0x0a101f);
+            // Space Grid
+            const grid = new THREE.GridHelper(800, 60, 0x00f3ff, 0x0a1629);
             grid.position.y = -20;
             scene.add(grid);
 
-            // Create Interactive Stars
-            createInteractiveStars();
-
-            // Drag Controls
-            drag = new DragControls(stars, camera, renderer.domElement);
+            // Initialize Drag Controls
+            drag = new DragControls(planetMeshes, camera, renderer.domElement);
 
             drag.addEventListener('dragstart', (event) => {
-                orbit.enabled = false; // Disable orbit when dragging
-                event.object.material.emissiveIntensity = 2.0;
-                event.object.scale.multiplyScalar(1.2);
+                orbit.enabled = false;
+                showInfo(event.object.userData.name, event.object.userData.pm25);
+
+                // ULTRA SMOOTH: Scale up with GSAP
+                gsap.to(event.object.scale, { x: 1.4, y: 1.4, z: 1.4, duration: 0.5, ease: "back.out(2)" });
+                gsap.to(event.object.material, { emissiveIntensity: 1.5, duration: 0.3 });
             });
 
             drag.addEventListener('dragend', (event) => {
-                orbit.enabled = true; // Re-enable orbit
-                event.object.material.emissiveIntensity = 0.5;
-                event.object.scale.divideScalar(1.2);
+                orbit.enabled = true;
+                hideInfo();
+
+                // ULTRA SMOOTH: Land with bounce
+                gsap.to(event.object.scale, { x: 1, y: 1, z: 1, duration: 0.6, ease: "elastic.out(1, 0.5)" });
+                gsap.to(event.object.material, { emissiveIntensity: 0.4, duration: 0.5 });
+
+                // Smoothly snap to grid floor if too low
+                if (event.object.position.y < -15) {
+                    gsap.to(event.object.position, { y: 0, duration: 1, ease: "power2.out" });
+                }
             });
 
             animate();
 
-            // Loading screen hide
+            // Hide loading
             const loader = document.getElementById('loading');
             setTimeout(() => {
-                loader.style.opacity = '0';
-                setTimeout(() => loader.style.display = 'none', 800);
-            }, 1000);
+                gsap.to(loader, { opacity: 0, duration: 1, onComplete: () => loader.style.display = 'none' });
+            }, 1500);
         }
 
-        function createInteractiveStars() {
-            const starTypes = [
-                { geo: new THREE.IcosahedronGeometry(5, 0), color: 0x00f3ff }, // Neon Blue
-                { geo: new THREE.SphereGeometry(4, 32, 32), color: 0xfacc15 }, // Gold
-                { geo: new THREE.OctahedronGeometry(6, 0), color: 0xff0055 }, // Pink
-                { geo: new THREE.TorusKnotGeometry(3, 1, 64, 8), color: 0x4ade80 } // Green
-            ];
+        function createPlanet(id, pm25, name) {
+            const size = Math.max(3, pm25 / 5);
+            let color = 0x00f3ff;
+            if (pm25 > 25) color = 0x10b981;
+            if (pm25 > 37) color = 0xfacc15;
+            if (pm25 > 50) color = 0xef4444;
+            if (pm25 > 90) color = 0xa855f7;
 
-            for (let i = 0; i < 30; i++) {
-                const type = starTypes[Math.floor(Math.random() * starTypes.length)];
-                const mat = new THREE.MeshPhongMaterial({
-                    color: type.color,
-                    emissive: type.color,
-                    emissiveIntensity: 0.5,
-                    shininess: 100,
-                    flatShading: true
+            const geometry = new THREE.SphereGeometry(size, 32, 32);
+            const material = new THREE.MeshPhongMaterial({
+                color: color,
+                emissive: color,
+                emissiveIntensity: 0.4,
+                shininess: 80,
+                transparent: true,
+                opacity: 0.9
+            });
+
+            const mesh = new THREE.Mesh(geometry, material);
+
+            // Random Initial Position
+            const angle = Math.random() * Math.PI * 2;
+            const dist = 40 + Math.random() * 150;
+            mesh.position.set(Math.cos(angle) * dist, Math.random() * 40, Math.sin(angle) * dist);
+
+            mesh.userData = { id, pm25, name };
+            scene.add(mesh);
+            planetMeshes.push(mesh);
+
+            // Add Saturn Ring if PM2.5 is high
+            if (pm25 > 37) {
+                const ringGeo = new THREE.TorusGeometry(size * 1.8, 0.2, 2, 64);
+                const ringMat = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.4 });
+                const ring = new THREE.Mesh(ringGeo, ringMat);
+                ring.rotation.x = Math.PI / 2;
+                mesh.add(ring);
+            }
+
+            // Pop-in animation
+            mesh.scale.set(0, 0, 0);
+            gsap.to(mesh.scale, { x: 1, y: 1, z: 1, duration: 1.5, ease: "elastic.out(1, 0.5)" });
+
+            return mesh;
+        }
+
+        function initMQTT() {
+            try {
+                const client = mqtt.connect('wss://dustboy-wss-bridge.laris.workers.dev/mqtt');
+                client.on('connect', () => {
+                    client.subscribe('DUSTBOY/+/+/+/status');
                 });
 
-                const star = new THREE.Mesh(type.geo, mat);
+                client.on('message', (topic, msg) => {
+                    const data = JSON.parse(msg.toString());
+                    const id = topic.split('/')[2];
+                    const pm25 = parseFloat(data.pm25) || 0;
+                    const name = data.nickname || data.nickname_en || `ID-${id}`;
 
-                // Random position
-                star.position.set(
-                    (Math.random() - 0.5) * 200,
-                    Math.random() * 50,
-                    (Math.random() - 0.5) * 200
-                );
+                    if (!planets[id]) {
+                        planets[id] = createPlanet(id, pm25, name);
+                    } else {
+                        // Update existing planet data
+                        planets[id].userData.pm25 = pm25;
+                        // Optional: Smoothly transition color/size here if needed
+                    }
+                });
+            } catch (err) { console.error("MQTT Lab Error:", err); }
+        }
 
-                // Random rotation
-                star.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
+        function showInfo(name, pm25) {
+            const info = document.getElementById('planet-info');
+            info.innerHTML = `📡 Station: <span style="color:var(--accent)">${name}</span> | PM2.5: <span class="highlight-text">${pm25.toFixed(1)}</span>`;
+            info.style.opacity = '1';
+        }
 
-                scene.add(star);
-                stars.push(star);
-            }
+        function hideInfo() {
+            document.getElementById('planet-info').style.opacity = '0';
         }
 
         function animate() {
             requestAnimationFrame(animate);
+            const time = Date.now() * 0.001;
 
-            // Subtle rotation for un-picked stars
-            stars.forEach(s => {
-                if (!s.isDragging) {
-                    s.rotation.y += 0.01;
-                    s.rotation.x += 0.005;
+            if (orbit) orbit.update();
+            if (starField) starField.rotation.y += 0.0003;
+
+            // Cosmic Float for all planets
+            planetMeshes.forEach((mesh, i) => {
+                if (!mesh.isDragging) {
+                    mesh.position.y += Math.sin(time + i) * 0.02;
+                    mesh.rotation.y += 0.005;
                 }
             });
 
-            if (orbit) orbit.update();
             renderer.render(scene, camera);
         }
 
