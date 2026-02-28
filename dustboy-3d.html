@@ -120,7 +120,9 @@
             letter-spacing: 1px;
         }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&family=Sarabun:wght@400;700&display=swap"
+        rel="stylesheet">
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 
@@ -291,7 +293,35 @@
             group.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
 
             scene.add(group);
-            return { group, bar, top, sat, val: 0, name, color: 0x00f3ff };
+            return { group, bar, top, sat, val: 0, name, color: 0x00f3ff, textLabel: null };
+        }
+
+        function createTextSprite(text, color) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 512;
+            canvas.height = 128;
+
+            // Background for readability
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.7)';
+            ctx.roundRect ? ctx.roundRect(0, 0, 512, 128, 20) : ctx.fillRect(0, 0, 512, 128);
+            ctx.fill();
+
+            ctx.font = '800 64px "Outfit", "Sarabun", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            // Glow effect
+            ctx.shadowColor = color;
+            ctx.shadowBlur = 15;
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(text, 256, 64);
+
+            const texture = new THREE.CanvasTexture(canvas);
+            const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true });
+            const sprite = new THREE.Sprite(spriteMat);
+            sprite.scale.set(12, 3, 1);
+            return sprite;
         }
 
         function updateTower(id, pm25, name) {
@@ -308,11 +338,12 @@
             tower.val = pm25;
 
             // Multi-color Cyber Gradient
-            let color = 0x00f3ff; // Cyan
-            if (pm25 > 25) color = 0x10b981; // Green
-            if (pm25 > 37) color = 0xf59e0b; // Amber
-            if (pm25 > 50) color = 0xef4444; // Red
-            if (pm25 > 90) color = 0xa855f7; // Purple (Critical)
+            let colorHex = "#00f3ff";
+            let color = 0x00f3ff;
+            if (pm25 > 25) { color = 0x10b981; colorHex = "#10b981"; }
+            if (pm25 > 37) { color = 0xf59e0b; colorHex = "#f59e0b"; }
+            if (pm25 > 50) { color = 0xef4444; colorHex = "#ef4444"; }
+            if (pm25 > 90) { color = 0xa855f7; colorHex = "#a855f7"; }
             tower.color = color;
 
             const targetHeight = Math.max(1.5, pm25 / 1.0); // Slightly taller for visual impact
@@ -324,6 +355,13 @@
             tower.bar.material.color.setHex(color);
             tower.bar.material.emissive.setHex(color);
             tower.top.material.color.setHex(color);
+
+            // UPDATE OR CREATE TEXT LABEL
+            if (tower.textLabel) tower.group.remove(tower.textLabel);
+            const displayText = `${pm25.toFixed(1)} | ${name}`;
+            tower.textLabel = createTextSprite(displayText, colorHex);
+            tower.textLabel.position.y = targetHeight + 3.5;
+            tower.group.add(tower.textLabel);
 
             // Pulse Wave on arrival
             if (Math.random() > 0.6) createRing(tower.group.position, color);
