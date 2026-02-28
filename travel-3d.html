@@ -228,12 +228,16 @@
 
                 document.getElementById('loading').style.opacity = '0';
                 setTimeout(() => document.getElementById('loading').remove(), 500);
+            } else {
+                document.getElementById('loading').innerText = "FATAL: NO TRACK DATA FOUND";
+                console.error("Points length <= 1");
             }
         }
 
         async function loadCSV() {
             try {
                 const response = await fetch('travel-phitsanulok.csv');
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const data = await response.text();
                 const lines = data.split('\n').slice(1);
 
