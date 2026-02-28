@@ -234,8 +234,14 @@
                     const z = (midLat - lat) * SCALE;
                     const y = 0.1;
                     points.push(new THREE.Vector3(x, y, z));
+                    // ดึงชื่อจังหวัดจาก address (ตัวอย่าง: "..., Lampang 52190")
+                    const address = cols[11] || "";
+                    const addrParts = address.split(',');
+                    const provinceInfo = addrParts.length > 1 ? addrParts[addrParts.length - 1].trim().split(' ')[0] : (cols[10] || "กำลังเดินทาง...");
+
                     waypointsData.push({
-                        place: cols[10] || cols[8] || "กำลังเดินทาง...",
+                        place: cols[10] || "Unknown",
+                        province: provinceInfo,
                         time: cols[12]?.split(' ')[1] || "??:??",
                         bat: cols[2] || "0"
                     });
@@ -400,7 +406,7 @@
             const data = waypointsData[idx];
             if (!data) return;
             document.getElementById('current-pos').innerHTML =
-                `Loc: ${data.place} | Time: ${data.time} | Power: ${data.bat}%`;
+                `<span style="color: #facc15; font-weight: bold;">📍 ${data.province}</span> | ${data.place} | ${data.time} | 🔋${data.bat}%`;
         }
 
         window.addEventListener('resize', () => {
