@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DustBoy Real-time Monitor | Antigravity</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --accent: #facc15;
+            --text: #f8fafc;
+            --success: #4ade80;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Outfit', -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        header {
+            padding: 20px;
+            background: rgba(15, 23, 42, 0.8);
+            border-bottom: 1px solid rgba(250, 204, 21, 0.2);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: var(--accent);
+            letter-spacing: 1px;
+        }
+
+        .status {
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ef4444;
+        }
+
+        .dot.online {
+            background: var(--success);
+            box-shadow: 0 0 10px var(--success);
+        }
+
+        #feed {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .log-item {
+            background: var(--card-bg);
+            border-left: 4px solid var(--accent);
+            padding: 15px;
+            border-radius: 8px;
+            animation: slideIn 0.3s ease-out;
+            backdrop-filter: blur(5px);
+        }
+
+        .topic {
+            font-size: 0.7rem;
+            opacity: 0.6;
+            margin-bottom: 5px;
+            font-family: monospace;
+        }
+
+        .payload {
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            word-break: break-all;
+            color: var(--success);
+        }
+
+        .time {
+            float: right;
+            font-size: 0.7rem;
+            opacity: 0.5;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&display=swap" rel="stylesheet">
+    <!-- MQTT.js CDN -->
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+</head>
+
+<body>
+    <header>
+        <h1>💨 DUSTBOY MQTT MONITOR</h1>
+        <div class="status">
+            <div id="status-dot" class="dot"></div>
+            <span id="status-text">Connecting...</span>
+        </div>
+    </header>
+
+    <div id="feed">
+        <div class="log-item" style="border-left-color: #60a5fa;">
+            <div class="payload">Waiting for telemetry data from DUSTBOY/+/+/+/status...</div>
+        </div>
+    </div>
+
+    <script>
+        const BROKER = 'wss://dustboy-wss-bridge.laris.workers.dev/mqtt';
+        const TOPIC = 'DUSTBOY/+/+/+/status';
+
+        const statusDot = document.getElementById('status-dot');
+        const statusText = document.getElementById('status-text');
+        const feed = document.getElementById('feed');
+
+        // Connect to the bridge
+        const client = mqtt.connect(BROKER);
+
+        client.on('connect', () => {
+            statusDot.classList.add('online');
+            statusText.innerText = 'ONLINE - Subscribed';
+            client.subscribe(TOPIC);
+            console.log('Connected to DustBoy Bridge!');
+        });
+
+        client.on('message', (topic, message) => {
+            const time = new Date().toLocaleTimeString();
+            const item = document.createElement('div');
+            item.className = 'log-item';
+
+            item.innerHTML = `
+                <span class="time">${time}</span>
+                <div class="topic">Topic: ${topic}</div>
+                <div class="payload">${message.toString()}</div>
+            `;
+
+            feed.prepend(item);
+
+            // Limit items to avoid memory issues
+            if (feed.children.length > 50) {
+                feed.removeChild(feed.lastChild);
+            }
+        });
+
+        client.on('error', (err) => {
+            statusDot.classList.remove('online');
+            statusText.innerText = 'ERROR: ' + err.message;
+        });
+    </script>
+</body>
+
+</html>
