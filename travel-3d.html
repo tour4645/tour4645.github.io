@@ -7,8 +7,10 @@
     <title>Txur Oracle | 3D Quantum Train</title>
     <style>
         :root {
-            --bg-color: #050505;
+            --bg-color: #bae6fd;
             --accent-color: #facc15;
+            --glass-bg: rgba(15, 23, 42, 0.85);
+            /* สีนํ้าเงินเข้มโปร่งใส */
             --text-main: #ffffff;
         }
 
@@ -17,42 +19,105 @@
             overflow: hidden;
             background: var(--bg-color);
             font-family: 'Outfit', sans-serif;
-        }
-
-        #ui {
-            position: absolute;
-            top: 20px;
-            left: 20px;
             color: var(--text-main);
-            z-index: 100;
-            pointer-events: none;
         }
 
-        h1 {
-            margin: 0;
-            font-size: 1.2rem;
-            color: var(--accent-color);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .stats {
-            font-size: 0.8rem;
-            opacity: 0.7;
-            margin-top: 5px;
-        }
-
-        .controls {
+        /* Morning UI Card */
+        #ui-card {
             position: absolute;
-            bottom: 20px;
-            right: 20px;
-            color: white;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 10px;
+            top: 25px;
+            left: 25px;
+            background: var(--glass-bg);
+            padding: 20px;
+            border-radius: 12px;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(250, 204, 21, 0.15);
+            min-width: 280px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .header-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+
+        .sun-icon {
+            font-size: 1.4rem;
+        }
+
+        #train-title {
+            margin: 0;
+            font-size: 1.1rem;
+            color: #60a5fa;
+            /* สีนํ้าเงินอ่อนแบบในรูป */
+            font-weight: 600;
+        }
+
+        #province-name {
+            margin: 5px 0;
+            font-size: 1.4rem;
+            color: #ef4444;
+            /* สีชมพู/แดง แบบลำปางในรูป */
+            font-weight: 600;
+        }
+
+        .time-label {
+            color: #4ade80;
+            /* สีเขียวเวลา */
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .info-details {
+            margin-top: 10px;
+            font-size: 0.75rem;
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+
+        .info-details span {
+            color: #60a5fa;
+        }
+
+        /* Bottom Controls */
+        #controls-bar {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            z-index: 100;
+        }
+
+        .btn {
+            background: #60a5fa;
+            color: #0f172a;
+            border: none;
+            padding: 10px 24px;
             border-radius: 8px;
-            font-size: 0.7rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(96, 165, 250, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
             backdrop-filter: blur(5px);
-            border: 1px solid rgba(250, 204, 21, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         #loading {
@@ -70,13 +135,13 @@
             transition: opacity 0.5s;
         }
 
-        .footer {
+        .footer-credit {
             position: absolute;
             bottom: 20px;
-            left: 20px;
-            color: var(--accent-color);
+            right: 25px;
             font-size: 0.7rem;
-            opacity: 0.6;
+            opacity: 0.5;
+            color: white;
         }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600&display=swap" rel="stylesheet">
@@ -85,17 +150,28 @@
 <body>
     <div id="loading">QUANTUM CORE INITIALIZING...</div>
 
-    <div id="ui">
-        <h1>3D Quantum Logistics</h1>
-        <div class="stats" id="current-pos">Analyzing Waypoints...</div>
+    <div id="ui-card">
+        <div class="header-row">
+            <span class="sun-icon">☀️</span>
+            <h2 id="train-title">ขบวน 8 — Antigravity (Morning)</h2>
+        </div>
+        <div id="province-name">กำลังระบุจังหวัด...</div>
+        <div class="time-label" id="current-time">--:--</div>
+
+        <div class="info-details">
+            Route: <span>Chiang Mai → Phitsanulok</span><br>
+            Distance: <span>~300 km</span> • Waypoints: <span id="wp-count">330</span><br>
+            Antigravity — The Unseen Force
+        </div>
     </div>
 
-    <div class="footer">Txur Oracle | PSRU Workshop | 2026</div>
-
-    <div class="controls">
-        LMB: Rotate | RMB: Pan | Scroll: Zoom<br>
-        Source: travel-phitsanulok.csv
+    <div id="controls-bar">
+        <button class="btn" onclick="togglePlay()"><span id="pause-icon">II</span> Pause</button>
+        <button class="btn" onclick="toggleCamera()"><span id="cam-icon">🚂</span> On Train</button>
+        <button class="btn btn-secondary" onclick="resetJourney()">↺ Reset</button>
     </div>
+
+    <div class="footer-credit">🚂 สร้างโดย Antigravity Oracle — The Unseen Force</div>
 
     <!-- Three.js CDN -->
     <script type="importmap">
@@ -117,6 +193,9 @@
         let currentIdx = 0;
         let clock = new THREE.Clock();
         let curve, trainCars = [];
+        let isPlaying = true;
+        let followTrain = true;
+        let sun;
 
         const SCALE = 500; // Scaling factor for coordinates
 
@@ -150,15 +229,31 @@
 
             // Natural Grid
             const grid = new THREE.GridHelper(2000, 100, 0x94a3b8, 0xcbd5e1);
+            grid.position.y = -0.01;
             scene.add(grid);
 
             // Ground Plane (Natural Ground)
-            const groundGeo = new THREE.PlaneGeometry(5000, 5000);
-            const groundMat = new THREE.MeshPhongMaterial({ color: 0xdcfce7 }); // Soft Green Ground
+            const groundGeo = new THREE.PlaneGeometry(8000, 8000);
+            const groundMat = new THREE.MeshPhongMaterial({ color: 0x4ade80 }); // Bright Morning Green
             const ground = new THREE.Mesh(groundGeo, groundMat);
             ground.rotation.x = -Math.PI / 2;
-            ground.position.y = -0.05;
+            ground.position.y = -0.1;
             scene.add(ground);
+
+            // THE SUN (Morning Sun)
+            const sunGroup = new THREE.Group();
+            const sunGeo = new THREE.SphereGeometry(20, 32, 32);
+            const sunMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
+            sun = new THREE.Mesh(sunGeo, sunMat);
+
+            // Sun Glow
+            const glowGeo = new THREE.SphereGeometry(25, 32, 32);
+            const glowMat = new THREE.MeshBasicMaterial({ color: 0xfef08a, transparent: true, opacity: 0.3 });
+            const glow = new THREE.Mesh(glowGeo, glowMat);
+
+            sunGroup.add(sun, glow);
+            sunGroup.position.set(-400, 300, -800); // วางไว้ไกลๆ บนฟ้า
+            scene.add(sunGroup);
 
             // Load Data
             await loadCSV();
@@ -365,6 +460,8 @@
             requestAnimationFrame(animate);
             const delta = clock.getDelta();
 
+            if (!isPlaying) return;
+
             // ใช้ delta เพื่อความเร็วคงที่เสมอ
             curveTimer += delta * 0.012;
             if (curveTimer > 1) curveTimer = 0;
@@ -390,13 +487,16 @@
                 }
 
                 const headCar = trainCars[0];
-                if (headCar) {
-                    const relativeCameraOffset = new THREE.Vector3(0, 15, -35);
+                if (headCar && followTrain) {
+                    const relativeCameraOffset = new THREE.Vector3(0, 12, -30);
                     const cameraOffset = relativeCameraOffset.applyMatrix4(headCar.matrixWorld);
-                    camera.position.lerp(cameraOffset, 0.04);
-                    controls.target.lerp(headCar.position, 0.08);
+                    camera.position.lerp(cameraOffset, 0.06);
+                    controls.target.lerp(headCar.position, 0.1);
                 }
             }
+
+            // ขยับพระอาทิตย์เล็กน้อยตามเวลา (Optional)
+            if (sun) sun.parent.rotation.y += 0.0001;
 
             controls.update();
             renderer.render(scene, camera);
@@ -405,9 +505,27 @@
         function updateUI(idx) {
             const data = waypointsData[idx];
             if (!data) return;
-            document.getElementById('current-pos').innerHTML =
-                `<span style="color: #facc15; font-weight: bold;">📍 ${data.province}</span> | ${data.place} | ${data.time} | 🔋${data.bat}%`;
+            document.getElementById('province-name').innerText = data.province || "กำลังเดินทาง...";
+            document.getElementById('current-time').innerText = data.time || "--:--";
+            document.getElementById('wp-count').innerText = points.length;
         }
+
+        // Control Functions
+        window.togglePlay = () => {
+            isPlaying = !isPlaying;
+            document.getElementById('pause-icon').innerText = isPlaying ? "II" : "▶";
+        };
+
+        window.toggleCamera = () => {
+            followTrain = !followTrain;
+            document.getElementById('cam-icon').innerText = followTrain ? "🚂" : "🎥";
+        };
+
+        window.resetJourney = () => {
+            curveTimer = 0;
+            isPlaying = true;
+            document.getElementById('pause-icon').innerText = "II";
+        };
 
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
